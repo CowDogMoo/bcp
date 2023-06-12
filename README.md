@@ -49,4 +49,8 @@ to download the file.
     aws s3 ls s3://$BUCKET_NAME
     ```
 
+1. Run super basic test:
 
+    ```shell
+    bcp test/bla $INST_ID:/tmp/bla
+    ```
