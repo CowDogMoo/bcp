@@ -61,5 +61,11 @@ func main() {
 		log.Fatalf("Unable to run command via SSM: %v", err)
 	}
 
+	// Confirm that the file has been copied successfully
+	confirmCommand := fmt.Sprintf("ls %s", destinationDirectory)
+	if _, err := ssm.RunCommand(ssmConnection.Client, ssmInstanceID, []string{confirmCommand}); err != nil {
+		log.Fatalf("Unable to run command via SSM: %v", err)
+	}
+
 	log.Println("File copied successfully!")
 }
