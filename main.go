@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -24,6 +23,10 @@ var (
 			bucket := viper.GetString("bucket")
 
 			sourceDirectory := args[0]
+			// Check if source directory exists
+			if _, err := os.Stat(sourceDirectory); os.IsNotExist(err) {
+				cobra.CheckErr(err)
+			}
 			ssmPath := args[1]
 			split := strings.Split(ssmPath, ":")
 			ssmInstanceID := split[0]
@@ -32,16 +35,7 @@ var (
 
 			// create S3 and SSM connections
 			s3Connection := s3.CreateConnection()
-			if s3Connection.Session == nil {
-				log.Fatalf("Failed to create S3 connection")
-				return
-			}
-
 			ssmConnection := ssm.CreateConnection()
-			if ssmConnection.Client == nil {
-				log.Fatalf("Failed to create SSM connection")
-				return
-			}
 
 			bucketName := bucket
 			uploadFP := sourceDirectory
@@ -59,24 +53,23 @@ var (
 			// Download the file from S3 via SSM to the remote instance
 			s3URL := fmt.Sprintf("s3://%s/%s", bucketName, uploadFP)
 			awsCLICheck, err := ssmutils.CheckAWSCLIInstalled(ssmConnection.Client, ssmInstanceID)
-			if err != nil || !awsCLICheck {
-				if err != nil {
-					log.Fatalf("unable to check if AWS CLI is installed: %v", err)
-				} else {
-					log.Fatalf("AWS CLI is not installed on the instance")
-				}
+			cobra.CheckErr(err)
+			if !awsCLICheck {
+				fmt.Println("AWS CLI is not installed on the instance")
+				return
 			}
+
 			downloadCommand := fmt.Sprintf("aws s3 cp %s %s --recursive", s3URL, destinationDirectory)
 			if _, err := ssm.RunCommand(ssmConnection.Client, ssmInstanceID, []string{downloadCommand}); err != nil {
-				log.Fatalf("unable to run command via SSM: %v", err)
+				cobra.CheckErr(err)
 			}
 
 			confirmCommand := fmt.Sprintf("ls %s", destinationDirectory)
 			if _, err := ssm.RunCommand(ssmConnection.Client, ssmInstanceID, []string{confirmCommand}); err != nil {
-				log.Fatalf("unable to run command via SSM: %v", err)
+				cobra.CheckErr(err)
 			}
 
-			log.Println("File copied successfully!")
+			fmt.Println("File copied successfully!")
 		},
 	}
 
@@ -86,14 +79,9 @@ var (
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&bucket, "bucket", "b", "",
 		"Bucket to use for the transfer")
-	if err := viper.BindPFlag("bucket", rootCmd.PersistentFlags().Lookup("bucket")); err != nil {
-		log.Fatalf("unable to bind flag: %v", err)
-	}
+	cobra.CheckErr(viper.BindPFlag("bucket", rootCmd.PersistentFlags().Lookup("bucket")))
 }
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	cobra.CheckErr(rootCmd.Execute())
 }
