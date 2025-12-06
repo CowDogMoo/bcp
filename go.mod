@@ -1,6 +1,8 @@
 module github.com/cowdogmoo/bcp
 
-go 1.20
+go 1.23
+
+toolchain go1.25.5
 
 require (
 	github.com/aws/aws-sdk-go v1.44.280
