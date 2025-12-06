@@ -22,65 +22,33 @@ THE SOFTWARE.
 
 package model
 
-// TransferConfig contains configuration for file transfer operations
 type TransferConfig struct {
-	// Source is the local source path
-	Source string
-
-	// SSMInstanceID is the target EC2 instance ID
+	Source        string
 	SSMInstanceID string
-
-	// Destination is the remote destination path
-	Destination string
-
-	// BucketName is the S3 bucket used for transfer
-	BucketName string
-
-	// MaxRetries is the maximum number of retry attempts for AWS operations
-	MaxRetries int
-
-	// RetryDelay is the base delay between retries (exponential backoff)
-	RetryDelay int
+	Destination   string
+	BucketName    string
+	MaxRetries    int
+	RetryDelay    int
 }
 
-// AWSConfig contains AWS-specific configuration
 type AWSConfig struct {
-	// Region is the AWS region
-	Region string
-
-	// Profile is the AWS CLI profile to use
+	Region  string
 	Profile string
-
-	// Bucket is the default S3 bucket for transfers
-	Bucket string
+	Bucket  string
 }
 
-// LogConfig contains logging configuration
 type LogConfig struct {
-	// Format is the log format (text, json, color)
 	Format string
-
-	// Level is the log level (debug, info, warn, error)
-	Level string
+	Level  string
 }
 
-// Config is the root configuration structure
 type Config struct {
-	// AWS configuration
-	AWS AWSConfig `yaml:"aws"`
-
-	// Log configuration
-	Log LogConfig `yaml:"log"`
-
-	// Transfer configuration defaults
+	AWS      AWSConfig        `yaml:"aws"`
+	Log      LogConfig        `yaml:"log"`
 	Transfer TransferDefaults `yaml:"transfer"`
 }
 
-// TransferDefaults contains default values for transfer operations
 type TransferDefaults struct {
-	// MaxRetries is the default maximum retry attempts
 	MaxRetries int `yaml:"max_retries"`
-
-	// RetryDelay is the default base retry delay in seconds
 	RetryDelay int `yaml:"retry_delay"`
 }

@@ -30,16 +30,13 @@ import (
 	"strings"
 )
 
-// ValidateSourcePath validates that the source path exists and is accessible
 func ValidateSourcePath(path string) error {
 	if path == "" {
 		return fmt.Errorf("source path cannot be empty")
 	}
 
-	// Clean the path
 	cleanPath := filepath.Clean(path)
 
-	// Check if path exists
 	info, err := os.Stat(cleanPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -48,7 +45,6 @@ func ValidateSourcePath(path string) error {
 		return fmt.Errorf("failed to access source path: %w", err)
 	}
 
-	// Check if it's readable
 	if !info.Mode().IsDir() && !info.Mode().IsRegular() {
 		return fmt.Errorf("source path is not a regular file or directory: %s", cleanPath)
 	}
@@ -56,7 +52,6 @@ func ValidateSourcePath(path string) error {
 	return nil
 }
 
-// ValidateSSMPath validates the SSM path format (instance-id:destination)
 func ValidateSSMPath(ssmPath string) (instanceID string, destination string, err error) {
 	if ssmPath == "" {
 		return "", "", fmt.Errorf("SSM path cannot be empty")
@@ -78,13 +73,11 @@ func ValidateSSMPath(ssmPath string) (instanceID string, destination string, err
 		return "", "", fmt.Errorf("destination path cannot be empty")
 	}
 
-	// Validate instance ID format (i-xxxxxxxxxxxxxxxxx)
 	instanceIDPattern := regexp.MustCompile(`^i-[0-9a-f]{8,17}$`)
 	if !instanceIDPattern.MatchString(instanceID) {
 		return "", "", fmt.Errorf("invalid SSM instance ID format: %s (expected format: i-xxxxxxxxx)", instanceID)
 	}
 
-	// Validate destination is absolute path
 	if !filepath.IsAbs(destination) {
 		return "", "", fmt.Errorf("destination must be an absolute path, got: %s", destination)
 	}
@@ -92,7 +85,6 @@ func ValidateSSMPath(ssmPath string) (instanceID string, destination string, err
 	return instanceID, destination, nil
 }
 
-// ValidateBucketName validates S3 bucket name format
 func ValidateBucketName(bucket string) error {
 	if bucket == "" {
 		return fmt.Errorf("bucket name cannot be empty")
@@ -114,18 +106,15 @@ func ValidateBucketName(bucket string) error {
 		return fmt.Errorf("invalid bucket name format: %s (must contain only lowercase letters, numbers, dots, and hyphens)", bucket)
 	}
 
-	// Check if it looks like an IP address
 	ipPattern := regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)
 	if ipPattern.MatchString(bucket) {
 		return fmt.Errorf("bucket name cannot be formatted as an IP address: %s", bucket)
 	}
 
-	// Check for consecutive periods
 	if strings.Contains(bucket, "..") {
 		return fmt.Errorf("bucket name cannot contain consecutive periods: %s", bucket)
 	}
 
-	// Check for adjacent period and hyphen
 	if strings.Contains(bucket, ".-") || strings.Contains(bucket, "-.") {
 		return fmt.Errorf("bucket name cannot have adjacent periods and hyphens: %s", bucket)
 	}

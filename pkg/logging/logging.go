@@ -30,21 +30,15 @@ import (
 	"time"
 )
 
-// Level represents the severity of a log message
 type Level int
 
 const (
-	// DebugLevel logs are typically voluminous and usually disabled in production
 	DebugLevel Level = iota
-	// InfoLevel is the default logging priority
 	InfoLevel
-	// WarnLevel logs are more important than Info, but don't need individual review
 	WarnLevel
-	// ErrorLevel logs are high-priority
 	ErrorLevel
 )
 
-// String returns the string representation of a log level
 func (l Level) String() string {
 	switch l {
 	case DebugLevel:
@@ -60,14 +54,12 @@ func (l Level) String() string {
 	}
 }
 
-// Logger provides structured logging capabilities
 type Logger struct {
 	level         Level
 	format        string
 	consoleWriter io.Writer
 }
 
-// Global logger instance
 var defaultLogger *Logger
 
 func init() {
@@ -78,13 +70,11 @@ func init() {
 	}
 }
 
-// Init initializes the logger with the specified configuration
 func Init(format string, level string) {
 	defaultLogger.format = format
 	defaultLogger.level = parseLevel(level)
 }
 
-// parseLevel converts a string level to a Level type
 func parseLevel(level string) Level {
 	switch strings.ToLower(level) {
 	case "debug":
@@ -100,12 +90,10 @@ func parseLevel(level string) Level {
 	}
 }
 
-// shouldLog checks if a message at the given level should be logged
 func (l *Logger) shouldLog(level Level) bool {
 	return level >= l.level
 }
 
-// formatMessage formats a log message with timestamp and level
 func (l *Logger) formatMessage(level Level, format string, args ...interface{}) string {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	message := fmt.Sprintf(format, args...)
@@ -118,7 +106,6 @@ func (l *Logger) formatMessage(level Level, format string, args ...interface{}) 
 	return fmt.Sprintf("[%s] %s: %s", timestamp, level.String(), message)
 }
 
-// Debug logs a message at debug level
 func Debug(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(DebugLevel) {
 		msg := defaultLogger.formatMessage(DebugLevel, format, args...)
@@ -126,7 +113,6 @@ func Debug(format string, args ...interface{}) {
 	}
 }
 
-// Info logs a message at info level
 func Info(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(InfoLevel) {
 		msg := defaultLogger.formatMessage(InfoLevel, format, args...)
@@ -134,7 +120,6 @@ func Info(format string, args ...interface{}) {
 	}
 }
 
-// Warn logs a message at warn level
 func Warn(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(WarnLevel) {
 		msg := defaultLogger.formatMessage(WarnLevel, format, args...)
@@ -142,7 +127,6 @@ func Warn(format string, args ...interface{}) {
 	}
 }
 
-// Error logs a message at error level
 func Error(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(ErrorLevel) {
 		msg := defaultLogger.formatMessage(ErrorLevel, format, args...)

@@ -34,15 +34,12 @@ import (
 	"github.com/l50/awsutils/ssm"
 )
 
-// Execute performs the complete file transfer operation
 func Execute(config model.TransferConfig) error {
 	log.Info("Starting transfer from %s to %s:%s", config.Source, config.SSMInstanceID, config.Destination)
 
-	// Create S3 and SSM connections
 	s3Connection := s3.CreateConnection()
 	ssmConnection := ssm.CreateConnection()
 
-	// Upload to S3 with retry
 	uploadPath := strings.TrimPrefix(config.Source, "./")
 	s3URL := fmt.Sprintf("s3://%s/%s", config.BucketName, uploadPath)
 
@@ -54,7 +51,6 @@ func Execute(config model.TransferConfig) error {
 	}
 	log.Info("Upload to S3 completed successfully")
 
-	// Check if AWS CLI is installed on remote instance
 	log.Info("Checking if AWS CLI is installed on instance %s...", config.SSMInstanceID)
 	awsCLICheck, err := ssm.CheckAWSCLIInstalled(ssmConnection.Client, config.SSMInstanceID)
 	if err != nil {
@@ -65,7 +61,6 @@ func Execute(config model.TransferConfig) error {
 	}
 	log.Info("AWS CLI is installed on remote instance")
 
-	// Download from S3 to remote instance with retry
 	log.Info("Downloading from S3 to remote instance...")
 	downloadCommand := fmt.Sprintf("aws s3 cp %s %s --recursive", s3URL, config.Destination)
 	if err := retryOperation(func() error {
@@ -76,7 +71,6 @@ func Execute(config model.TransferConfig) error {
 	}
 	log.Info("Download to remote instance completed successfully")
 
-	// Verify the files were copied
 	log.Info("Verifying files on remote instance...")
 	confirmCommand := fmt.Sprintf("ls -la %s", config.Destination)
 	output, err := ssm.RunCommand(ssmConnection.Client, config.SSMInstanceID, []string{confirmCommand})
@@ -90,7 +84,6 @@ func Execute(config model.TransferConfig) error {
 	return nil
 }
 
-// retryOperation retries an operation with exponential backoff
 func retryOperation(operation func() error, maxRetries int, baseDelay int) error {
 	var lastErr error
 
@@ -111,7 +104,6 @@ func retryOperation(operation func() error, maxRetries int, baseDelay int) error
 
 		lastErr = err
 
-		// Check if it's a retryable error
 		if !isRetryableError(err) {
 			log.Error("Non-retryable error encountered: %v", err)
 			return err
@@ -123,13 +115,11 @@ func retryOperation(operation func() error, maxRetries int, baseDelay int) error
 	return fmt.Errorf("operation failed after %d retries: %w", maxRetries, lastErr)
 }
 
-// isRetryableError determines if an error is retryable
 func isRetryableError(err error) bool {
 	if err == nil {
 		return false
 	}
 
-	// Check for AWS errors
 	if awsErr, ok := err.(awserr.Error); ok {
 		switch awsErr.Code() {
 		case "RequestTimeout", "ServiceUnavailable", "ThrottlingException",
@@ -139,7 +129,6 @@ func isRetryableError(err error) bool {
 		}
 	}
 
-	// Check for common network errors
 	errStr := err.Error()
 	retryableStrings := []string{
 		"connection reset",

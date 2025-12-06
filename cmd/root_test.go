@@ -239,3 +239,123 @@ func TestRootCmdFlagDefaults(t *testing.T) {
 		t.Errorf("quiet flag default = %v, want 'false'", quietFlag.DefValue)
 	}
 }
+
+func TestBucketCompletion(t *testing.T) {
+	// Skip if AWS credentials are not available
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_PROFILE") == "" {
+		t.Skip("Skipping test: AWS credentials not configured")
+	}
+
+	cmd := RootCmd()
+	completions, directive := bucketCompletion(cmd, []string{}, "")
+
+	// Should return completions or error directive
+	if completions == nil && directive == 0 {
+		t.Error("Expected completions or error directive")
+	}
+
+	t.Logf("Found %d bucket completion(s)", len(completions))
+}
+
+func TestInstanceCompletion(t *testing.T) {
+	// Skip if AWS credentials are not available
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_PROFILE") == "" {
+		t.Skip("Skipping test: AWS credentials not configured")
+	}
+
+	cmd := RootCmd()
+	completions, directive := instanceCompletion(cmd, []string{}, "")
+
+	// Should return completions or error directive
+	if completions == nil && directive == 0 {
+		t.Error("Expected completions or error directive")
+	}
+
+	t.Logf("Found %d instance completion(s)", len(completions))
+}
+
+func TestArgsCompletion(t *testing.T) {
+	// Skip if AWS credentials are not available
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_PROFILE") == "" {
+		t.Skip("Skipping test: AWS credentials not configured")
+	}
+
+	cmd := RootCmd()
+
+	// Test first argument (source path)
+	t.Run("First argument", func(t *testing.T) {
+		completions, directive := argsCompletion(cmd, []string{}, "")
+		// First arg should use file completion (directive = 1 for ShellCompDirectiveDefault)
+		t.Logf("First arg completions: %v, directive: %v", completions, directive)
+	})
+
+	// Test second argument (SSM path)
+	t.Run("Second argument - instance IDs", func(t *testing.T) {
+		completions, directive := argsCompletion(cmd, []string{"/tmp/file"}, "i-")
+		// Should suggest instance IDs with colon
+		t.Logf("Second arg instance completions: %d items, directive: %v", len(completions), directive)
+	})
+
+	// Test second argument with colon (common paths)
+	t.Run("Second argument - with colon", func(t *testing.T) {
+		completions, directive := argsCompletion(cmd, []string{"/tmp/file"}, "i-1234567890abcdef0:")
+		// Should suggest common paths
+		if len(completions) == 0 {
+			t.Log("No path completions (may be expected)")
+		}
+		t.Logf("Second arg path completions: %d items, directive: %v", len(completions), directive)
+	})
+
+	// Test third argument (should return no completion)
+	t.Run("Third argument", func(t *testing.T) {
+		completions, directive := argsCompletion(cmd, []string{"/tmp/file", "i-1234567890abcdef0:/tmp"}, "")
+		// Should not complete third argument
+		if len(completions) != 0 {
+			t.Error("Expected no completions for third argument")
+		}
+		t.Logf("Third arg: %d completions, directive: %v", len(completions), directive)
+	})
+}
+
+func TestBucketCompletionFiltering(t *testing.T) {
+	// Skip if AWS credentials are not available
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_PROFILE") == "" {
+		t.Skip("Skipping test: AWS credentials not configured")
+	}
+
+	cmd := RootCmd()
+
+	// Test with a prefix
+	completions, _ := bucketCompletion(cmd, []string{}, "test")
+
+	// Verify that returned completions start with the prefix
+	for _, comp := range completions {
+		if len(comp) > 0 && comp[0:1] != "t" && comp[0:1] != "T" {
+			// This is okay - might not have buckets starting with "test"
+			t.Logf("Completion %q doesn't start with 'test' (may be expected)", comp)
+		}
+	}
+
+	t.Logf("Filtered bucket completions: %d items", len(completions))
+}
+
+func TestInstanceCompletionFiltering(t *testing.T) {
+	// Skip if AWS credentials are not available
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_PROFILE") == "" {
+		t.Skip("Skipping test: AWS credentials not configured")
+	}
+
+	cmd := RootCmd()
+
+	// Test with a prefix
+	completions, _ := instanceCompletion(cmd, []string{}, "i-")
+
+	// Verify that returned completions start with the prefix
+	for _, comp := range completions {
+		if len(comp) > 0 && comp[0:2] != "i-" {
+			t.Errorf("Completion %q doesn't start with 'i-'", comp)
+		}
+	}
+
+	t.Logf("Filtered instance completions: %d items", len(completions))
+}

@@ -29,7 +29,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 )
 
-// GetBucketNames returns a list of S3 bucket names for shell completion
 func GetBucketNames() ([]string, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"), // S3 ListBuckets is global
@@ -52,7 +51,6 @@ func GetBucketNames() ([]string, error) {
 	return buckets, nil
 }
 
-// GetInstanceIDs returns a list of SSM-managed instance IDs for shell completion
 func GetInstanceIDs() ([]string, error) {
 	sess, err := session.NewSession()
 	if err != nil {
@@ -73,7 +71,6 @@ func GetInstanceIDs() ([]string, error) {
 				if aws.StringValue(inst.PingStatus) == "Online" {
 					instanceID := aws.StringValue(inst.InstanceId)
 					name := aws.StringValue(inst.ComputerName)
-					// Include both ID and name for better UX
 					if name != "" {
 						instanceIDs = append(instanceIDs, instanceID+"\t"+name)
 					} else {

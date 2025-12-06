@@ -30,7 +30,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output (debug level)")
 	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress all output except errors")
 
-	// Register bucket flag completion
 	if err := rootCmd.RegisterFlagCompletionFunc("bucket", bucketCompletion); err != nil {
 		log.Error("Failed to register bucket completion: %v", err)
 	}
@@ -40,14 +39,12 @@ func init() {
 	}
 }
 
-// initConfig initializes the configuration
 func initConfig() {
 	if err := config.Init(cfgFile); err != nil {
 		log.Error("Failed to initialize config: %v", err)
 		os.Exit(1)
 	}
 
-	// Override log level based on flags
 	if verbose {
 		log.Init(config.GlobalConfig.Log.Format, "debug")
 	} else if quiet {
@@ -55,7 +52,6 @@ func initConfig() {
 	}
 }
 
-// Execute adds child commands to the root command and sets flags appropriately.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		log.Error("Command execution failed: %v", err)
@@ -63,7 +59,6 @@ func Execute() {
 	}
 }
 
-// RootCmd represents the base command when called without any subcommands
 func RootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "bcp [sourceDirectory] [ssmPath]",
@@ -81,18 +76,15 @@ Example:
 			sourceDirectory := args[0]
 			ssmPath := args[1]
 
-			// Validate source path
 			if err := validation.ValidateSourcePath(sourceDirectory); err != nil {
 				return fmt.Errorf("invalid source path: %w", err)
 			}
 
-			// Validate and parse SSM path
 			ssmInstanceID, destinationDirectory, err := validation.ValidateSSMPath(ssmPath)
 			if err != nil {
 				return fmt.Errorf("invalid SSM path: %w", err)
 			}
 
-			// Get bucket name (from flag, config, or error)
 			bucketName := bucket
 			if bucketName == "" {
 				bucketName = config.GetBucket()
@@ -101,12 +93,10 @@ Example:
 				return fmt.Errorf("bucket name is required (use --bucket flag or set in config)")
 			}
 
-			// Validate bucket name
 			if err := validation.ValidateBucketName(bucketName); err != nil {
 				return fmt.Errorf("invalid bucket name: %w", err)
 			}
 
-			// Create transfer configuration
 			transferConfig := model.TransferConfig{
 				Source:        sourceDirectory,
 				SSMInstanceID: ssmInstanceID,
@@ -116,7 +106,6 @@ Example:
 				RetryDelay:    config.RetryDelay,
 			}
 
-			// Execute the transfer
 			if err := transfer.Execute(transferConfig); err != nil {
 				return fmt.Errorf("transfer failed: %w", err)
 			}
@@ -128,17 +117,14 @@ Example:
 	return rootCmd
 }
 
-// Declare and initialize rootCmd outside the RootCmd function
 var rootCmd = RootCmd()
 
-// bucketCompletion provides dynamic completion for S3 bucket names
 func bucketCompletion(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	buckets, err := completion.GetBucketNames()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
 
-	// Filter buckets that match the prefix
 	var matches []string
 	for _, bucket := range buckets {
 		if strings.HasPrefix(bucket, toComplete) {
@@ -149,17 +135,14 @@ func bucketCompletion(cmd *cobra.Command, args []string, toComplete string) ([]s
 	return matches, cobra.ShellCompDirectiveNoFileComp
 }
 
-// instanceCompletion provides dynamic completion for SSM instance IDs
 func instanceCompletion(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	instances, err := completion.GetInstanceIDs()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
 
-	// Filter instances that match the prefix
 	var matches []string
 	for _, instance := range instances {
-		// Extract just the instance ID for matching
 		instanceID := strings.Split(instance, "\t")[0]
 		if strings.HasPrefix(instanceID, toComplete) {
 			matches = append(matches, instance)
@@ -169,21 +152,16 @@ func instanceCompletion(cmd *cobra.Command, args []string, toComplete string) ([
 	return matches, cobra.ShellCompDirectiveNoFileComp
 }
 
-// argsCompletion provides completion for positional arguments
 func argsCompletion(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	// First argument: source path (use file completion)
 	if len(args) == 0 {
 		return nil, cobra.ShellCompDirectiveDefault
 	}
 
-	// Second argument: SSM path (instance-id:destination)
 	if len(args) == 1 {
-		// If the user has already typed a colon, suggest common paths
 		if strings.Contains(toComplete, ":") {
 			parts := strings.Split(toComplete, ":")
 			if len(parts) == 2 {
 				instanceID := parts[0]
-				// Suggest common destination paths
 				commonPaths := []string{
 					instanceID + ":/tmp/",
 					instanceID + ":/home/ec2-user/",
@@ -195,7 +173,6 @@ func argsCompletion(cmd *cobra.Command, args []string, toComplete string) ([]str
 			}
 		}
 
-		// Otherwise, suggest instance IDs with colon suffix
 		instances, err := completion.GetInstanceIDs()
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
@@ -205,7 +182,6 @@ func argsCompletion(cmd *cobra.Command, args []string, toComplete string) ([]str
 		for _, instance := range instances {
 			instanceID := strings.Split(instance, "\t")[0]
 			if strings.HasPrefix(instanceID, toComplete) {
-				// Add colon suffix to indicate more input needed
 				matches = append(matches, instanceID+":")
 			}
 		}

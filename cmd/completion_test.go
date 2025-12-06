@@ -154,3 +154,48 @@ func TestCompletionCmdStructure(t *testing.T) {
 		})
 	}
 }
+
+func TestCompletionCmdBashExecution(t *testing.T) {
+	// Just verify the function doesn't panic
+	// The actual output goes to os.Stdout which we can't easily capture here
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("completion bash panicked: %v", r)
+		}
+	}()
+
+	completionCmd.Run(completionCmd, []string{"bash"})
+}
+
+func TestCompletionCmdZshExecution(t *testing.T) {
+	// Just verify the function doesn't panic
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("completion zsh panicked: %v", r)
+		}
+	}()
+
+	completionCmd.Run(completionCmd, []string{"zsh"})
+}
+
+func TestCompletionCmdFishExecution(t *testing.T) {
+	// Just verify the function doesn't panic
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("completion fish panicked: %v", r)
+		}
+	}()
+
+	completionCmd.Run(completionCmd, []string{"fish"})
+}
+
+func TestCompletionCmdPowershellExecution(t *testing.T) {
+	// Just verify the function doesn't panic
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("completion powershell panicked: %v", r)
+		}
+	}()
+
+	completionCmd.Run(completionCmd, []string{"powershell"})
+}

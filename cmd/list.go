@@ -143,7 +143,6 @@ Example:
 	},
 }
 
-// listSSMInstances lists instances managed by SSM
 func listSSMInstances(sess *session.Session) error {
 	svc := ssm.New(sess)
 
@@ -180,7 +179,6 @@ func listSSMInstances(sess *session.Session) error {
 		ipAddress := aws.StringValue(inst.IPAddress)
 		name := aws.StringValue(inst.ComputerName)
 
-		// Color code status
 		statusStr := status
 		if status == "Online" {
 			statusStr = "\033[32m" + status + "\033[0m" // green
@@ -195,7 +193,6 @@ func listSSMInstances(sess *session.Session) error {
 	return nil
 }
 
-// listAllInstances lists all EC2 instances
 func listAllInstances(sess *session.Session) error {
 	svc := ec2.New(sess)
 
@@ -225,7 +222,6 @@ func listAllInstances(sess *session.Session) error {
 				runningCount++
 			}
 
-			// Get instance name from tags
 			var name string
 			for _, tag := range instance.Tags {
 				if aws.StringValue(tag.Key) == "Name" {
@@ -234,7 +230,6 @@ func listAllInstances(sess *session.Session) error {
 				}
 			}
 
-			// Color code state
 			stateStr := state
 			if state == "running" {
 				stateStr = "\033[32m" + state + "\033[0m" // green

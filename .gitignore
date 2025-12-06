@@ -35,6 +35,7 @@ TODO
 *.test
 test-results/
 testdata/tmp/
+coverage.html
 
 # Go workspace file
 go.work

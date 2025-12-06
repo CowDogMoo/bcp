@@ -33,23 +33,15 @@ import (
 )
 
 var (
-	// GlobalConfig holds the global configuration
 	GlobalConfig model.Config
-
-	// MaxRetries is the maximum number of retry attempts for AWS operations
-	MaxRetries = 3
-
-	// RetryDelay is the base delay in seconds between retries
-	RetryDelay = 2
+	MaxRetries   = 3
+	RetryDelay   = 2
 )
 
-// Init initializes the configuration system
 func Init(cfgFile string) error {
 	if cfgFile != "" {
-		// Use config file from the flag
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Search for config in home directory and current directory
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return fmt.Errorf("failed to get user home directory: %w", err)
@@ -62,14 +54,11 @@ func Init(cfgFile string) error {
 		viper.AddConfigPath("/etc/bcp")
 	}
 
-	// Set defaults
 	setDefaults()
 
-	// Read environment variables
 	viper.SetEnvPrefix("BCP")
 	viper.AutomaticEnv()
 
-	// Read config file if it exists
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			log.Debug("No config file found, using defaults")
@@ -80,37 +69,29 @@ func Init(cfgFile string) error {
 		log.Debug("Using config file: %s", viper.ConfigFileUsed())
 	}
 
-	// Unmarshal config
 	if err := viper.Unmarshal(&GlobalConfig); err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-	// Load constants
 	LoadConstants()
 
-	// Initialize logging
 	log.Init(GlobalConfig.Log.Format, GlobalConfig.Log.Level)
 
 	return nil
 }
 
-// setDefaults sets default configuration values
 func setDefaults() {
-	// Log defaults
 	viper.SetDefault("log.format", "text")
 	viper.SetDefault("log.level", "info")
 
-	// AWS defaults
 	viper.SetDefault("aws.region", "us-east-1")
 	viper.SetDefault("aws.profile", "default")
 	viper.SetDefault("aws.bucket", "")
 
-	// Transfer defaults
 	viper.SetDefault("transfer.max_retries", 3)
 	viper.SetDefault("transfer.retry_delay", 2)
 }
 
-// LoadConstants loads configuration constants
 func LoadConstants() {
 	MaxRetries = viper.GetInt("transfer.max_retries")
 	if MaxRetries == 0 {
@@ -123,17 +104,14 @@ func LoadConstants() {
 	}
 }
 
-// GetBucket returns the configured S3 bucket name
 func GetBucket() string {
 	return GlobalConfig.AWS.Bucket
 }
 
-// GetRegion returns the configured AWS region
 func GetRegion() string {
 	return GlobalConfig.AWS.Region
 }
 
-// GetProfile returns the configured AWS profile
 func GetProfile() string {
 	return GlobalConfig.AWS.Profile
 }
