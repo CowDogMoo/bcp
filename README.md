@@ -6,7 +6,7 @@
 [![Tests](https://github.com/CowDogMoo/bcp/actions/workflows/tests.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/tests.yaml)
 [![🚨 Semgrep Analysis](https://github.com/CowDogMoo/bcp/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/semgrep.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/CowDogMoo/bcp/badge.svg?branch=main)](https://coveralls.io/github/CowDogMoo/bcp?branch=main)
-[![goreleaser](https://github.com/CowDogMoo/bcp/actions/workflows/goreleaser.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/goreleaser.yaml)
+[![Latest Release](https://img.shields.io/github/v/release/cowdogmoo/bcp)](https://github.com/CowDogMoo/bcp/releases/latest)
 [![Renovate](https://github.com/CowDogMoo/bcp/actions/workflows/renovate.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/renovate.yaml)
 
 `bcp` (Blob Copy) provides SCP-like functionality for copying files
