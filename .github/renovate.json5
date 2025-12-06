@@ -78,9 +78,9 @@
     },
     {
       "description": "Group test dependencies",
-      "matchPackagePatterns": [
-        "*test*",
-        "*mock*"
+      "matchPackageNames": [
+        "/*test*/",
+        "/*mock*/"
       ],
       "groupName": "test dependencies"
     }
@@ -93,8 +93,8 @@
     {
       "customType": "regex",
       "description": "Update Go tools installed via go install in shell scripts",
-      "fileMatch": [
-        "\\.sh$"
+      "managerFilePatterns": [
+        "/\\.sh$/"
       ],
       "matchStrings": [
         "go install (?<depName>[^@]+?)@(?<currentValue>[0-9.-a-zA-Z]+)"
@@ -104,8 +104,8 @@
     {
       "customType": "regex",
       "description": "Update Go version in go.mod",
-      "fileMatch": [
-        "^go\\.mod$"
+      "managerFilePatterns": [
+        "/^go\\.mod$/"
       ],
       "matchStrings": [
         "^go (?<currentValue>\\d+\\.\\d+)$"
@@ -116,8 +116,8 @@
     {
       "customType": "regex",
       "description": "Update GO_VERSION in GitHub Actions workflows",
-      "fileMatch": [
-        "^\\.github/workflows/[^/]+\\.ya?ml$"
+      "managerFilePatterns": [
+        "/^\\.github/workflows/[^/]+\\.ya?ml$/"
       ],
       "matchStrings": [
         "GO_VERSION:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)"
@@ -128,8 +128,8 @@
     {
       "customType": "regex",
       "description": "Update golang version in .tool-versions",
-      "fileMatch": [
-        "^\\.tool-versions$"
+      "managerFilePatterns": [
+        "/^\\.tool-versions$/"
       ],
       "matchStrings": [
         "golang\\s+(?<currentValue>\\d+\\.\\d+\\.\\d+)"
@@ -142,7 +142,10 @@
     "gomodTidy",
     "gomodUpdateImportPaths"
   ],
-  "prConcurrentLimit": 10,
+  "prConcurrentLimit": 20,
   "prHourlyLimit": 0,
+  "branchConcurrentLimit": 20,
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "flexible",
   "timezone": "UTC"
 }
