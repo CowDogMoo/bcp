@@ -23,13 +23,15 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	log "github.com/cowdogmoo/bcp/pkg/logging"
 	"github.com/spf13/cobra"
 )
@@ -69,15 +71,14 @@ Example:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Info("Fetching S3 buckets...")
 
-		sess, err := session.NewSession(&aws.Config{
-			Region: aws.String("us-east-1"), // S3 ListBuckets is global
-		})
+		ctx := context.TODO()
+		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion("us-east-1"))
 		if err != nil {
-			return fmt.Errorf("failed to create AWS session: %w", err)
+			return fmt.Errorf("failed to load AWS config: %w", err)
 		}
 
-		svc := s3.New(sess)
-		result, err := svc.ListBuckets(nil)
+		svc := s3.NewFromConfig(cfg)
+		result, err := svc.ListBuckets(ctx, &s3.ListBucketsInput{})
 		if err != nil {
 			return fmt.Errorf("failed to list buckets: %w", err)
 		}
@@ -92,8 +93,11 @@ Example:
 		fmt.Println("================================================ =========================")
 
 		for _, bucket := range result.Buckets {
-			bucketName := aws.StringValue(bucket.Name)
-			created := aws.TimeValue(bucket.CreationDate).Format("2006-01-02 15:04:05 MST")
+			bucketName := aws.ToString(bucket.Name)
+			created := ""
+			if bucket.CreationDate != nil {
+				created = bucket.CreationDate.Format("2006-01-02 15:04:05 MST")
+			}
 			fmt.Printf("%-48s %s\n", bucketName, created)
 		}
 
@@ -114,14 +118,16 @@ Example:
   bcp list instances --all
   bcp list instances --region us-west-2`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := context.TODO()
+
 		// Determine region
 		region := listRegion
 		if region == "" {
-			sess, err := session.NewSession()
+			cfg, err := config.LoadDefaultConfig(ctx)
 			if err != nil {
-				return fmt.Errorf("failed to create AWS session: %w", err)
+				return fmt.Errorf("failed to load AWS config: %w", err)
 			}
-			region = aws.StringValue(sess.Config.Region)
+			region = cfg.Region
 			if region == "" {
 				region = "us-east-1" // fallback default
 			}
@@ -129,37 +135,34 @@ Example:
 
 		log.Info("Fetching instances in region: %s", region)
 
-		sess, err := session.NewSession(&aws.Config{
-			Region: aws.String(region),
-		})
+		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 		if err != nil {
-			return fmt.Errorf("failed to create AWS session: %w", err)
+			return fmt.Errorf("failed to load AWS config: %w", err)
 		}
 
 		if listAll {
-			return listAllInstances(sess)
+			return listAllInstances(ctx, cfg)
 		}
-		return listSSMInstances(sess)
+		return listSSMInstances(ctx, cfg)
 	},
 }
 
-func listSSMInstances(sess *session.Session) error {
-	svc := ssm.New(sess)
+func listSSMInstances(ctx context.Context, cfg aws.Config) error {
+	svc := ssm.NewFromConfig(cfg)
 
 	input := &ssm.DescribeInstanceInformationInput{
-		MaxResults: aws.Int64(50),
+		MaxResults: aws.Int32(50),
 	}
 
-	var instances []*ssm.InstanceInformation
+	var instances []ssmtypes.InstanceInformation
 
-	err := svc.DescribeInstanceInformationPages(input,
-		func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
-			instances = append(instances, page.InstanceInformationList...)
-			return !lastPage
-		})
-
-	if err != nil {
-		return fmt.Errorf("failed to list SSM instances: %w", err)
+	paginator := ssm.NewDescribeInstanceInformationPaginator(svc, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list SSM instances: %w", err)
+		}
+		instances = append(instances, page.InstanceInformationList...)
 	}
 
 	if len(instances) == 0 {
@@ -173,11 +176,11 @@ func listSSMInstances(sess *session.Session) error {
 	fmt.Println("==================== ======== =============== =============== ================================")
 
 	for _, inst := range instances {
-		instanceID := aws.StringValue(inst.InstanceId)
-		status := aws.StringValue(inst.PingStatus)
-		platform := aws.StringValue(inst.PlatformType)
-		ipAddress := aws.StringValue(inst.IPAddress)
-		name := aws.StringValue(inst.ComputerName)
+		instanceID := aws.ToString(inst.InstanceId)
+		status := string(inst.PingStatus)
+		platform := string(inst.PlatformType)
+		ipAddress := aws.ToString(inst.IPAddress)
+		name := aws.ToString(inst.ComputerName)
 
 		var statusStr string
 		if status == "Online" {
@@ -193,10 +196,10 @@ func listSSMInstances(sess *session.Session) error {
 	return nil
 }
 
-func listAllInstances(sess *session.Session) error {
-	svc := ec2.New(sess)
+func listAllInstances(ctx context.Context, cfg aws.Config) error {
+	svc := ec2.NewFromConfig(cfg)
 
-	result, err := svc.DescribeInstances(&ec2.DescribeInstancesInput{})
+	result, err := svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
 	if err != nil {
 		return fmt.Errorf("failed to list EC2 instances: %w", err)
 	}
@@ -213,10 +216,10 @@ func listAllInstances(sess *session.Session) error {
 		for _, instance := range reservation.Instances {
 			instanceCount++
 
-			instanceID := aws.StringValue(instance.InstanceId)
-			state := aws.StringValue(instance.State.Name)
-			instanceType := aws.StringValue(instance.InstanceType)
-			privateIP := aws.StringValue(instance.PrivateIpAddress)
+			instanceID := aws.ToString(instance.InstanceId)
+			state := string(instance.State.Name)
+			instanceType := string(instance.InstanceType)
+			privateIP := aws.ToString(instance.PrivateIpAddress)
 
 			if state == "running" {
 				runningCount++
@@ -224,8 +227,8 @@ func listAllInstances(sess *session.Session) error {
 
 			var name string
 			for _, tag := range instance.Tags {
-				if aws.StringValue(tag.Key) == "Name" {
-					name = aws.StringValue(tag.Value)
+				if aws.ToString(tag.Key) == "Name" {
+					name = aws.ToString(tag.Value)
 					break
 				}
 			}

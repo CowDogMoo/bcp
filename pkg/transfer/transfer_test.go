@@ -26,8 +26,39 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/smithy-go"
 )
+
+// mockAPIError implements smithy.APIError for testing
+type mockAPIError struct {
+	code    string
+	message string
+	fault   smithy.ErrorFault
+}
+
+func (e *mockAPIError) Error() string {
+	return e.message
+}
+
+func (e *mockAPIError) ErrorCode() string {
+	return e.code
+}
+
+func (e *mockAPIError) ErrorMessage() string {
+	return e.message
+}
+
+func (e *mockAPIError) ErrorFault() smithy.ErrorFault {
+	return e.fault
+}
+
+func newMockAPIError(code, message string) error {
+	return &mockAPIError{
+		code:    code,
+		message: message,
+		fault:   smithy.FaultUnknown,
+	}
+}
 
 func TestIsRetryableError(t *testing.T) {
 	tests := []struct {
@@ -42,47 +73,47 @@ func TestIsRetryableError(t *testing.T) {
 		},
 		{
 			name:     "AWS RequestTimeout",
-			err:      awserr.New("RequestTimeout", "request timeout", nil),
+			err:      newMockAPIError("RequestTimeout", "request timeout"),
 			expected: true,
 		},
 		{
 			name:     "AWS ServiceUnavailable",
-			err:      awserr.New("ServiceUnavailable", "service unavailable", nil),
+			err:      newMockAPIError("ServiceUnavailable", "service unavailable"),
 			expected: true,
 		},
 		{
 			name:     "AWS ThrottlingException",
-			err:      awserr.New("ThrottlingException", "throttling", nil),
+			err:      newMockAPIError("ThrottlingException", "throttling"),
 			expected: true,
 		},
 		{
 			name:     "AWS RequestLimitExceeded",
-			err:      awserr.New("RequestLimitExceeded", "limit exceeded", nil),
+			err:      newMockAPIError("RequestLimitExceeded", "limit exceeded"),
 			expected: true,
 		},
 		{
 			name:     "AWS TooManyRequestsException",
-			err:      awserr.New("TooManyRequestsException", "too many requests", nil),
+			err:      newMockAPIError("TooManyRequestsException", "too many requests"),
 			expected: true,
 		},
 		{
 			name:     "AWS InternalError",
-			err:      awserr.New("InternalError", "internal error", nil),
+			err:      newMockAPIError("InternalError", "internal error"),
 			expected: true,
 		},
 		{
 			name:     "AWS RequestThrottled",
-			err:      awserr.New("RequestThrottled", "request throttled", nil),
+			err:      newMockAPIError("RequestThrottled", "request throttled"),
 			expected: true,
 		},
 		{
 			name:     "AWS Throttling",
-			err:      awserr.New("Throttling", "throttling", nil),
+			err:      newMockAPIError("Throttling", "throttling"),
 			expected: true,
 		},
 		{
 			name:     "AWS non-retryable error",
-			err:      awserr.New("ValidationException", "validation failed", nil),
+			err:      newMockAPIError("ValidationException", "validation failed"),
 			expected: false,
 		},
 		{
@@ -163,7 +194,7 @@ func TestRetryOperation(t *testing.T) {
 				return func() error {
 					count++
 					if count < 3 {
-						return awserr.New("RequestTimeout", "timeout", nil)
+						return newMockAPIError("RequestTimeout", "timeout")
 					}
 					return nil
 				}
@@ -186,7 +217,7 @@ func TestRetryOperation(t *testing.T) {
 		{
 			name: "fail after max retries",
 			operation: func() error {
-				return awserr.New("RequestTimeout", "timeout", nil)
+				return newMockAPIError("RequestTimeout", "timeout")
 			},
 			maxRetries:    2,
 			baseDelay:     1,
@@ -208,7 +239,7 @@ func TestRetryOperation(t *testing.T) {
 func TestRetryOperationExponentialBackoff(t *testing.T) {
 	// Test that retry operation respects exponential backoff
 	operation := func() error {
-		return awserr.New("RequestTimeout", "timeout", nil)
+		return newMockAPIError("RequestTimeout", "timeout")
 	}
 
 	// This should fail after trying multiple times with exponential backoff

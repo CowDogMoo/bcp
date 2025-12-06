@@ -80,7 +80,11 @@ func TestRootCmdArgs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Failed to cleanup temp dir: %v", err)
+		}
+	}()
 
 	// Create a test file
 	testFile := filepath.Join(tmpDir, "testfile.txt")
@@ -141,7 +145,11 @@ func TestRootCmdValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Failed to cleanup temp dir: %v", err)
+		}
+	}()
 
 	// Create a test file
 	testFile := filepath.Join(tmpDir, "testfile.txt")

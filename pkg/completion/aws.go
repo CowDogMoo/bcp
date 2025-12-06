@@ -23,66 +23,68 @@ THE SOFTWARE.
 package completion
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
 func GetBucketNames() ([]string, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1"), // S3 ListBuckets is global
-	})
+	ctx := context.TODO()
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion("us-east-1"))
 	if err != nil {
 		return nil, err
 	}
 
-	svc := s3.New(sess)
-	result, err := svc.ListBuckets(nil)
+	svc := s3.NewFromConfig(cfg)
+	result, err := svc.ListBuckets(ctx, &s3.ListBucketsInput{})
 	if err != nil {
 		return nil, err
 	}
 
 	buckets := make([]string, 0, len(result.Buckets))
 	for _, bucket := range result.Buckets {
-		buckets = append(buckets, aws.StringValue(bucket.Name))
+		buckets = append(buckets, aws.ToString(bucket.Name))
 	}
 
 	return buckets, nil
 }
 
 func GetInstanceIDs() ([]string, error) {
-	sess, err := session.NewSession()
+	ctx := context.TODO()
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := ssm.New(sess)
+	svc := ssm.NewFromConfig(cfg)
 
 	input := &ssm.DescribeInstanceInformationInput{
-		MaxResults: aws.Int64(50),
+		MaxResults: aws.Int32(50),
 	}
 
 	var instanceIDs []string
 
-	err = svc.DescribeInstanceInformationPages(input,
-		func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
-			for _, inst := range page.InstanceInformationList {
-				if aws.StringValue(inst.PingStatus) == "Online" {
-					instanceID := aws.StringValue(inst.InstanceId)
-					name := aws.StringValue(inst.ComputerName)
-					if name != "" {
-						instanceIDs = append(instanceIDs, instanceID+"\t"+name)
-					} else {
-						instanceIDs = append(instanceIDs, instanceID)
-					}
+	paginator := ssm.NewDescribeInstanceInformationPaginator(svc, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, inst := range page.InstanceInformationList {
+			if string(inst.PingStatus) == "Online" {
+				instanceID := aws.ToString(inst.InstanceId)
+				name := aws.ToString(inst.ComputerName)
+				if name != "" {
+					instanceIDs = append(instanceIDs, instanceID+"\t"+name)
+				} else {
+					instanceIDs = append(instanceIDs, instanceID)
 				}
 			}
-			return !lastPage
-		})
-
-	if err != nil {
-		return nil, err
+		}
 	}
 
 	return instanceIDs, nil

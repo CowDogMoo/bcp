@@ -109,27 +109,39 @@ func (l *Logger) formatMessage(level Level, format string, args ...interface{}) 
 func Debug(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(DebugLevel) {
 		msg := defaultLogger.formatMessage(DebugLevel, format, args...)
-		_, _ = fmt.Fprintln(defaultLogger.consoleWriter, msg)
+		if _, err := fmt.Fprintln(defaultLogger.consoleWriter, msg); err != nil {
+			// Debug logs are not critical, but try stderr as fallback
+			fmt.Fprintf(os.Stderr, "Failed to write debug log: %v\n", err)
+		}
 	}
 }
 
 func Info(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(InfoLevel) {
 		msg := defaultLogger.formatMessage(InfoLevel, format, args...)
-		_, _ = fmt.Fprintln(defaultLogger.consoleWriter, msg)
+		if _, err := fmt.Fprintln(defaultLogger.consoleWriter, msg); err != nil {
+			// Info logs are not critical, but try stderr as fallback
+			fmt.Fprintf(os.Stderr, "Failed to write info log: %v\n", err)
+		}
 	}
 }
 
 func Warn(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(WarnLevel) {
 		msg := defaultLogger.formatMessage(WarnLevel, format, args...)
-		_, _ = fmt.Fprintln(defaultLogger.consoleWriter, msg)
+		if _, err := fmt.Fprintln(defaultLogger.consoleWriter, msg); err != nil {
+			// Warn is important, write to stderr
+			fmt.Fprintf(os.Stderr, "Failed to write warning log: %v\nOriginal message: %s\n", err, msg)
+		}
 	}
 }
 
 func Error(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(ErrorLevel) {
 		msg := defaultLogger.formatMessage(ErrorLevel, format, args...)
-		fmt.Fprintln(defaultLogger.consoleWriter, msg)
+		if _, err := fmt.Fprintln(defaultLogger.consoleWriter, msg); err != nil {
+			// Error logs are critical - panic if we can't write them
+			panic(fmt.Sprintf("Failed to write error log: %v\nOriginal message: %s", err, msg))
+		}
 	}
 }

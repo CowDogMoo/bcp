@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
+# Determine the path to govulncheck
+GOPATH=$(go env GOPATH)
+GOVULNCHECK="${GOPATH}/bin/govulncheck"
+
 # Check if govulncheck is installed
-if ! command -v govulncheck &>/dev/null; then
+if [ ! -f "$GOVULNCHECK" ]; then
 	echo "govulncheck is not installed. Installing..."
 	if ! go install golang.org/x/vuln/cmd/govulncheck@latest; then
 		echo "Warning: Failed to install govulncheck, skipping vulnerability scan"
@@ -12,14 +16,14 @@ if ! command -v govulncheck &>/dev/null; then
 fi
 
 # Verify govulncheck is now available
-if ! command -v govulncheck &>/dev/null; then
-	echo "Warning: govulncheck not found in PATH after installation, skipping scan"
+if [ ! -f "$GOVULNCHECK" ]; then
+	echo "Warning: govulncheck not found after installation, skipping scan"
 	exit 0
 fi
 
 # Run govulncheck vulnerability scan
 echo "Running govulncheck vulnerability scan..."
-if ! output=$(govulncheck ./... 2>&1); then
+if ! output=$("$GOVULNCHECK" ./... 2>&1); then
 	echo ""
 	echo "❌ govulncheck found vulnerabilities in dependencies!"
 	echo "$output"

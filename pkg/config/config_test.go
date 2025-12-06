@@ -95,7 +95,11 @@ log:
 			if err != nil {
 				t.Fatalf("Failed to create temp dir: %v", err)
 			}
-			defer func() { _ = os.RemoveAll(tmpDir) }()
+			defer func() {
+				if err := os.RemoveAll(tmpDir); err != nil {
+					t.Logf("Failed to cleanup temp dir: %v", err)
+				}
+			}()
 
 			// Setup config file if needed
 			if err := tt.setupConfig(tmpDir); err != nil {
@@ -223,7 +227,11 @@ func TestInitWithEnvironmentVariables(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Failed to cleanup temp dir: %v", err)
+		}
+	}()
 
 	configContent := `
 log:
