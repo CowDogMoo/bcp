@@ -139,11 +139,11 @@ func TestIsRetryableError(t *testing.T) {
 
 func TestRetryOperation(t *testing.T) {
 	tests := []struct {
-		name         string
-		operation    func() error
-		maxRetries   int
-		baseDelay    int
-		expectError  bool
+		name          string
+		operation     func() error
+		maxRetries    int
+		baseDelay     int
+		expectError   bool
 		expectedTries int
 	}{
 		{

@@ -205,11 +205,11 @@ func TestFormatMessageJSON(t *testing.T) {
 
 func TestLoggingFunctions(t *testing.T) {
 	tests := []struct {
-		name     string
-		logFunc  func(string, ...interface{})
-		level    Level
-		message  string
-		logLevel Level
+		name      string
+		logFunc   func(string, ...interface{})
+		level     Level
+		message   string
+		logLevel  Level
 		shouldLog bool
 	}{
 		{"Debug logs at debug level", Debug, DebugLevel, "debug message", DebugLevel, true},

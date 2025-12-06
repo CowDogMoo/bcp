@@ -145,11 +145,11 @@ func TestSetDefaults(t *testing.T) {
 
 func TestLoadConstants(t *testing.T) {
 	tests := []struct {
-		name           string
-		maxRetries     int
-		retryDelay     int
-		expectedRetry  int
-		expectedDelay  int
+		name          string
+		maxRetries    int
+		retryDelay    int
+		expectedRetry int
+		expectedDelay int
 	}{
 		{
 			name:          "valid values",

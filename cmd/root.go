@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/cowdogmoo/bcp/pkg/completion"
 	"github.com/cowdogmoo/bcp/pkg/config"
 	log "github.com/cowdogmoo/bcp/pkg/logging"
 	"github.com/cowdogmoo/bcp/pkg/model"
@@ -14,10 +16,10 @@ import (
 )
 
 var (
-	bucket    string
-	cfgFile   string
-	verbose   bool
-	quiet     bool
+	bucket  string
+	cfgFile string
+	verbose bool
+	quiet   bool
 )
 
 func init() {
@@ -27,6 +29,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&bucket, "bucket", "b", "", "S3 bucket to use for the transfer (required)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output (debug level)")
 	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress all output except errors")
+
+	// Register bucket flag completion
+	if err := rootCmd.RegisterFlagCompletionFunc("bucket", bucketCompletion); err != nil {
+		log.Error("Failed to register bucket completion: %v", err)
+	}
 
 	if err := viper.BindPFlag("aws.bucket", rootCmd.PersistentFlags().Lookup("bucket")); err != nil {
 		log.Error("Failed to bind bucket flag: %v", err)
@@ -68,7 +75,8 @@ AWS Systems Manager (SSM).
 
 Example:
   bcp ./my-files i-1234567890abcdef0:/home/ec2-user/files --bucket my-bucket`,
-		Args: cobra.ExactArgs(2),
+		Args:              cobra.ExactArgs(2),
+		ValidArgsFunction: argsCompletion,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			sourceDirectory := args[0]
 			ssmPath := args[1]
@@ -122,3 +130,88 @@ Example:
 
 // Declare and initialize rootCmd outside the RootCmd function
 var rootCmd = RootCmd()
+
+// bucketCompletion provides dynamic completion for S3 bucket names
+func bucketCompletion(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	buckets, err := completion.GetBucketNames()
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	// Filter buckets that match the prefix
+	var matches []string
+	for _, bucket := range buckets {
+		if strings.HasPrefix(bucket, toComplete) {
+			matches = append(matches, bucket)
+		}
+	}
+
+	return matches, cobra.ShellCompDirectiveNoFileComp
+}
+
+// instanceCompletion provides dynamic completion for SSM instance IDs
+func instanceCompletion(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	instances, err := completion.GetInstanceIDs()
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	// Filter instances that match the prefix
+	var matches []string
+	for _, instance := range instances {
+		// Extract just the instance ID for matching
+		instanceID := strings.Split(instance, "\t")[0]
+		if strings.HasPrefix(instanceID, toComplete) {
+			matches = append(matches, instance)
+		}
+	}
+
+	return matches, cobra.ShellCompDirectiveNoFileComp
+}
+
+// argsCompletion provides completion for positional arguments
+func argsCompletion(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	// First argument: source path (use file completion)
+	if len(args) == 0 {
+		return nil, cobra.ShellCompDirectiveDefault
+	}
+
+	// Second argument: SSM path (instance-id:destination)
+	if len(args) == 1 {
+		// If the user has already typed a colon, suggest common paths
+		if strings.Contains(toComplete, ":") {
+			parts := strings.Split(toComplete, ":")
+			if len(parts) == 2 {
+				instanceID := parts[0]
+				// Suggest common destination paths
+				commonPaths := []string{
+					instanceID + ":/tmp/",
+					instanceID + ":/home/ec2-user/",
+					instanceID + ":/opt/",
+					instanceID + ":/usr/local/bin/",
+					instanceID + ":/var/tmp/",
+				}
+				return commonPaths, cobra.ShellCompDirectiveNoSpace
+			}
+		}
+
+		// Otherwise, suggest instance IDs with colon suffix
+		instances, err := completion.GetInstanceIDs()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		var matches []string
+		for _, instance := range instances {
+			instanceID := strings.Split(instance, "\t")[0]
+			if strings.HasPrefix(instanceID, toComplete) {
+				// Add colon suffix to indicate more input needed
+				matches = append(matches, instanceID+":")
+			}
+		}
+
+		return matches, cobra.ShellCompDirectiveNoSpace
+	}
+
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}

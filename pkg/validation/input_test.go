@@ -65,18 +65,18 @@ func TestValidateSourcePath(t *testing.T) {
 
 func TestValidateSSMPath(t *testing.T) {
 	tests := []struct {
-		name             string
-		ssmPath          string
-		wantInstanceID   string
-		wantDestination  string
-		wantErr          bool
+		name            string
+		ssmPath         string
+		wantInstanceID  string
+		wantDestination string
+		wantErr         bool
 	}{
 		{
-			name:             "valid SSM path",
-			ssmPath:          "i-1234567890abcdef0:/home/ec2-user",
-			wantInstanceID:   "i-1234567890abcdef0",
-			wantDestination:  "/home/ec2-user",
-			wantErr:          false,
+			name:            "valid SSM path",
+			ssmPath:         "i-1234567890abcdef0:/home/ec2-user",
+			wantInstanceID:  "i-1234567890abcdef0",
+			wantDestination: "/home/ec2-user",
+			wantErr:         false,
 		},
 		{
 			name:    "empty path",
