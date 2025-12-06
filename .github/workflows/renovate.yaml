@@ -35,7 +35,6 @@ concurrency:
 # Retrieve BOT_USER_ID via `curl -s "https://api.github.com/users/${BOT_USERNAME}%5Bbot%5D" | jq .id`
 env:
   GO_VERSION: 1.25.5
-  PYTHON_VERSION: 3.12.6
   RENOVATE_GIT_AUTHOR: "${{ secrets.BOT_USERNAME }} <${{ secrets.BOT_USER_ID }}+${{ secrets.BOT_USERNAME }}[bot]@users.noreply.github.com>"
 
 # Permissions block for GitHub App
@@ -81,10 +80,8 @@ jobs:
           RENOVATE_AUTODISCOVER: true
           RENOVATE_AUTODISCOVER_FILTER: "${{ github.repository }}"
           RENOVATE_DRY_RUN: "${{ inputs.dryRun }}"
-          RENOVATE_INTERNAL_CHECKS_FILTER: strict
           RENOVATE_PLATFORM: github
           RENOVATE_PLATFORM_COMMIT: true
         with:
-          configurationFile: "${{ env.RENOVATE_ONBOARDING_CONFIG_FILE_NAME }}"
           token: "${{ steps.app-token.outputs.token }}"
           renovate-version: "${{ inputs.version || 'latest' }}"

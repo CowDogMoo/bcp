@@ -147,11 +147,6 @@
   "branchConcurrentLimit": 20,
   "minimumReleaseAge": "3 days",
   "internalChecksFilter": "flexible",
-  "stabilityDays": 0,
   "ignoreTests": false,
-  "statusCheckNames": [
-    "Pre-commit",
-    "Run tests and determine code coverage %"
-  ],
   "timezone": "UTC"
 }
