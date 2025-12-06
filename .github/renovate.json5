@@ -112,6 +112,30 @@
       ],
       "depNameTemplate": "golang",
       "datasourceTemplate": "golang-version"
+    },
+    {
+      "customType": "regex",
+      "description": "Update GO_VERSION in GitHub Actions workflows",
+      "fileMatch": [
+        "^\\.github/workflows/[^/]+\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "GO_VERSION:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "golang",
+      "datasourceTemplate": "golang-version"
+    },
+    {
+      "customType": "regex",
+      "description": "Update golang version in .tool-versions",
+      "fileMatch": [
+        "^\\.tool-versions$"
+      ],
+      "matchStrings": [
+        "golang\\s+(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "golang",
+      "datasourceTemplate": "golang-version"
     }
   ],
   "postUpdateOptions": [
