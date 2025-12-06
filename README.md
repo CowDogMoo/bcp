@@ -9,14 +9,17 @@
 [![goreleaser](https://github.com/CowDogMoo/bcp/actions/workflows/goreleaser.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/goreleaser.yaml)
 [![Renovate](https://github.com/CowDogMoo/bcp/actions/workflows/renovate.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/renovate.yaml)
 
-`bcp` (Blob Copy) provides SCP-like functionality for copying files to EC2 instances through S3 and AWS Systems Manager (SSM).
+`bcp` (Blob Copy) provides SCP-like functionality for copying files
+to EC2 instances through S3 and AWS Systems Manager (SSM).
 
 ## Features
 
 - **Resource Discovery**: List available S3 buckets and SSM-managed EC2 instances
 - **Robust Error Handling**: Retry logic with exponential backoff for transient failures
-- **Input Validation**: Comprehensive validation of paths, instance IDs, and bucket names
-- **Structured Logging**: Configurable logging with multiple levels (debug, info, warn, error)
+- **Input Validation**: Comprehensive validation of paths, instance IDs,
+  and bucket names
+- **Structured Logging**: Configurable logging with multiple levels
+  (debug, info, warn, error)
 - **Configuration File Support**: YAML-based configuration with sensible defaults
 - **Progress Reporting**: Clear progress messages during uploads and downloads
 
@@ -31,7 +34,8 @@ bcp [source] [ssm_instance_id:destination] --bucket BUCKET_NAME
 **Arguments:**
 
 - `source`: Local directory or file path to upload
-- `ssm_instance_id:destination`: SSM instance ID and remote destination path (format: `i-xxxxxxxxx:/path/to/dest`)
+- `ssm_instance_id:destination`: SSM instance ID and remote destination
+  path (format: `i-xxxxxxxxx:/path/to/dest`)
 
 ### List Resources
 
@@ -160,7 +164,8 @@ source ~/.config/fish/completions/bcp.fish
 
 - `bcp --bucket <TAB>` - Autocomplete S3 bucket names
 - `bcp file.txt <TAB>` - Autocomplete SSM instance IDs
-- `bcp file.txt i-xxx:<TAB>` - Suggest common destination paths (/tmp/, /home/ec2-user/, /opt/, etc.)
+- `bcp file.txt i-xxx:<TAB>` - Suggest common destination paths
+  (/tmp/, /home/ec2-user/, /opt/, etc.)
 
 ## Examples
 
