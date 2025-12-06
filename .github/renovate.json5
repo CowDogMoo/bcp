@@ -1,0 +1,124 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":disableRateLimiting",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":enablePreCommit",
+    ":automergeDigest",
+    ":automergeBranch",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "dependencyDashboardLabels": [
+    "renovate-dashboard"
+  ],
+  "dependencyDashboardTitle": "Renovate Dashboard 🤖",
+  "suppressNotifications": [
+    "prIgnoreNotification"
+  ],
+  "rebaseWhen": "conflicted",
+  "commitBodyTable": true,
+  "labels": [
+    "renovate"
+  ],
+  "platformAutomerge": true,
+  "pre-commit": {
+    "enabled": true
+  },
+  "github-actions": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "Enable all Go module updates",
+      "matchManagers": [
+        "gomod"
+      ],
+      "enabled": true
+    },
+    {
+      "description": "Auto merge Go module minor and patch updates",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Auto merge GitHub Actions minor and patch updates",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchDatasources": [
+        "github-tags"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Auto merge pre-commit hook updates",
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Group test dependencies",
+      "matchPackagePatterns": [
+        "*test*",
+        "*mock*"
+      ],
+      "groupName": "test dependencies"
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Go tools installed via go install in shell scripts",
+      "fileMatch": [
+        "\\.sh$"
+      ],
+      "matchStrings": [
+        "go install (?<depName>[^@]+?)@(?<currentValue>[0-9.-a-zA-Z]+)"
+      ],
+      "datasourceTemplate": "go"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Go version in go.mod",
+      "fileMatch": [
+        "^go\\.mod$"
+      ],
+      "matchStrings": [
+        "^go (?<currentValue>\\d+\\.\\d+)$"
+      ],
+      "depNameTemplate": "golang",
+      "datasourceTemplate": "golang-version"
+    }
+  ],
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths"
+  ],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 0,
+  "timezone": "UTC"
+}
