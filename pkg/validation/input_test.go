@@ -34,7 +34,7 @@ func TestValidateSourcePath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create a test file
 	testFile := filepath.Join(tmpDir, "testfile.txt")

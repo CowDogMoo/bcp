@@ -109,21 +109,21 @@ func (l *Logger) formatMessage(level Level, format string, args ...interface{}) 
 func Debug(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(DebugLevel) {
 		msg := defaultLogger.formatMessage(DebugLevel, format, args...)
-		fmt.Fprintln(defaultLogger.consoleWriter, msg)
+		_, _ = fmt.Fprintln(defaultLogger.consoleWriter, msg)
 	}
 }
 
 func Info(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(InfoLevel) {
 		msg := defaultLogger.formatMessage(InfoLevel, format, args...)
-		fmt.Fprintln(defaultLogger.consoleWriter, msg)
+		_, _ = fmt.Fprintln(defaultLogger.consoleWriter, msg)
 	}
 }
 
 func Warn(format string, args ...interface{}) {
 	if defaultLogger.shouldLog(WarnLevel) {
 		msg := defaultLogger.formatMessage(WarnLevel, format, args...)
-		fmt.Fprintln(defaultLogger.consoleWriter, msg)
+		_, _ = fmt.Fprintln(defaultLogger.consoleWriter, msg)
 	}
 }
 
