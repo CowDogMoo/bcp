@@ -1,28 +1,28 @@
 ---
 area/github:
   - changed-files:
-    - any-glob-to-any-file: '.github/**/*'
+      - any-glob-to-any-file: ".github/**/*"
 
 area/pre-commit:
   - changed-files:
-    - any-glob-to-any-file:
-      - '.pre-commit-config.yaml'
-      - '.hooks/**/*'
+      - any-glob-to-any-file:
+          - ".pre-commit-config.yaml"
+          - ".hooks/**/*"
 
 area/cmd:
   - changed-files:
-    - any-glob-to-any-file: 'cmd/**/*'
+      - any-glob-to-any-file: "cmd/**/*"
 
 area/pkg:
   - changed-files:
-    - any-glob-to-any-file: 'pkg/**/*'
+      - any-glob-to-any-file: "pkg/**/*"
 
 area/taskfiles:
   - changed-files:
-    - any-glob-to-any-file: 'Taskfile.yaml'
+      - any-glob-to-any-file: "Taskfile.yaml"
 
 area/go-mod-sum:
   - changed-files:
-    - any-glob-to-any-file:
-      - 'go.mod'
-      - 'go.sum'
+      - any-glob-to-any-file:
+          - "go.mod"
+          - "go.sum"

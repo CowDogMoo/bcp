@@ -42,8 +42,6 @@ import (
 )
 
 func Execute(transferConfig model.TransferConfig) error {
-	log.Info("Starting transfer from %s to %s:%s", transferConfig.Source, transferConfig.SSMInstanceID, transferConfig.Destination)
-
 	ctx := context.TODO()
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
@@ -52,6 +50,13 @@ func Execute(transferConfig model.TransferConfig) error {
 
 	s3Client := s3.NewFromConfig(cfg)
 	ssmClient := ssm.NewFromConfig(cfg)
+
+	return ExecuteWithClients(ctx, transferConfig, s3Client, ssmClient)
+}
+
+// ExecuteWithClients performs the transfer using provided AWS clients (useful for testing)
+func ExecuteWithClients(ctx context.Context, transferConfig model.TransferConfig, s3Client S3API, ssmClient SSMAPI) error {
+	log.Info("Starting transfer from %s to %s:%s", transferConfig.Source, transferConfig.SSMInstanceID, transferConfig.Destination)
 
 	uploadPath := strings.TrimPrefix(transferConfig.Source, "./")
 	s3URL := fmt.Sprintf("s3://%s/%s", transferConfig.BucketName, uploadPath)
@@ -103,7 +108,7 @@ func Execute(transferConfig model.TransferConfig) error {
 }
 
 // uploadToS3 uploads a file or directory to S3
-func uploadToS3(ctx context.Context, client *s3.Client, bucketName, localPath string) error {
+func uploadToS3(ctx context.Context, client S3API, bucketName, localPath string) error {
 	fileInfo, err := os.Stat(localPath)
 	if err != nil {
 		return fmt.Errorf("failed to stat %s: %w", localPath, err)
@@ -116,7 +121,7 @@ func uploadToS3(ctx context.Context, client *s3.Client, bucketName, localPath st
 }
 
 // uploadDirectory recursively uploads a directory to S3
-func uploadDirectory(ctx context.Context, client *s3.Client, bucketName, localPath string) error {
+func uploadDirectory(ctx context.Context, client S3API, bucketName, localPath string) error {
 	return filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -140,7 +145,7 @@ func uploadDirectory(ctx context.Context, client *s3.Client, bucketName, localPa
 }
 
 // uploadFile uploads a single file to S3
-func uploadFile(ctx context.Context, client *s3.Client, bucketName, filePath, s3Key string) error {
+func uploadFile(ctx context.Context, client S3API, bucketName, filePath, s3Key string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s: %w", filePath, err)
@@ -166,7 +171,7 @@ func uploadFile(ctx context.Context, client *s3.Client, bucketName, filePath, s3
 }
 
 // runSSMCommand executes a command on an EC2 instance via SSM and waits for completion
-func runSSMCommand(ctx context.Context, client *ssm.Client, instanceID string, commands []string) (string, error) {
+func runSSMCommand(ctx context.Context, client SSMAPI, instanceID string, commands []string) (string, error) {
 	sendCommandInput := &ssm.SendCommandInput{
 		InstanceIds:  []string{instanceID},
 		DocumentName: aws.String("AWS-RunShellScript"),
@@ -211,7 +216,7 @@ func runSSMCommand(ctx context.Context, client *ssm.Client, instanceID string, c
 }
 
 // checkAWSCLIInstalled checks if AWS CLI is installed on an EC2 instance
-func checkAWSCLIInstalled(ctx context.Context, client *ssm.Client, instanceID string) (bool, error) {
+func checkAWSCLIInstalled(ctx context.Context, client SSMAPI, instanceID string) (bool, error) {
 	output, err := runSSMCommand(ctx, client, instanceID, []string{"which aws"})
 	if err != nil {
 		// If the command fails, AWS CLI is not installed

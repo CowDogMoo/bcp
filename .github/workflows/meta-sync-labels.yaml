@@ -6,13 +6,15 @@ on:
     branches: ["main"]
     paths: [".github/labels.yaml"]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   labels:
     name: Sync Labels
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
     steps:
       - name: Generate Token
         uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
