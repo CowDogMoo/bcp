@@ -26,13 +26,13 @@ THE SOFTWARE.
 echo "Starting copyright check..."
 
 update_copyright() {
-    local file="$1"
-    local temp_file
-    temp_file=$(mktemp)
-    echo "${copyright_header}" > "${temp_file}"
-    echo "" >> "${temp_file}"  # Add an empty line after the header
-    sed '/^\/\*/,/^\*\//d' "$file" | sed '/./,$!d' >> "${temp_file}"
-    mv "${temp_file}" "${file}"
+	local file="$1"
+	local temp_file
+	temp_file=$(mktemp)
+	echo "${copyright_header}" >"${temp_file}"
+	echo "" >>"${temp_file}" # Add an empty line after the header
+	sed '/^\/\*/,/^\*\//d' "$file" | sed '/./,$!d' >>"${temp_file}"
+	mv "${temp_file}" "${file}"
 }
 
 # Get the list of staged .go files
@@ -40,19 +40,19 @@ staged_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' ||
 
 # Check if there are any staged .go files
 if [[ -z "$staged_files" ]]; then
-    echo "No .go files staged for commit. Exiting."
-    exit 0
+	echo "No .go files staged for commit. Exiting."
+	exit 0
 fi
 
 for file in $staged_files; do
-    echo "Checking file: $file"
-    if grep -qF "Copyright © 2025 Jayson Grace" "$file"; then
-        echo "Current copyright header is up-to-date in $file"
-    else
-        echo "Updating copyright header in $file"
-        update_copyright "$file"
-        echo "Copyright header updated in $file"
-    fi
+	echo "Checking file: $file"
+	if grep -qF "Copyright © 2025 Jayson Grace" "$file"; then
+		echo "Current copyright header is up-to-date in $file"
+	else
+		echo "Updating copyright header in $file"
+		update_copyright "$file"
+		echo "Copyright header updated in $file"
+	fi
 done
 
 echo "Copyright check completed."

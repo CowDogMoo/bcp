@@ -43,7 +43,7 @@ func TestRootCmdFlags(t *testing.T) {
 	// Test that flags are registered on the package-level rootCmd
 	bucketFlag := rootCmd.PersistentFlags().Lookup("bucket")
 	if bucketFlag == nil {
-		t.Error("bucket flag not registered")
+		t.Fatal("bucket flag not registered")
 	}
 	if bucketFlag.Shorthand != "b" {
 		t.Errorf("bucket flag shorthand = %v, want 'b'", bucketFlag.Shorthand)
@@ -51,7 +51,7 @@ func TestRootCmdFlags(t *testing.T) {
 
 	configFlag := rootCmd.PersistentFlags().Lookup("config")
 	if configFlag == nil {
-		t.Error("config flag not registered")
+		t.Fatal("config flag not registered")
 	}
 	if configFlag.Shorthand != "c" {
 		t.Errorf("config flag shorthand = %v, want 'c'", configFlag.Shorthand)
@@ -59,7 +59,7 @@ func TestRootCmdFlags(t *testing.T) {
 
 	verboseFlag := rootCmd.PersistentFlags().Lookup("verbose")
 	if verboseFlag == nil {
-		t.Error("verbose flag not registered")
+		t.Fatal("verbose flag not registered")
 	}
 	if verboseFlag.Shorthand != "v" {
 		t.Errorf("verbose flag shorthand = %v, want 'v'", verboseFlag.Shorthand)
@@ -214,10 +214,8 @@ func TestRootCmdValidation(t *testing.T) {
 
 			// We expect validation errors, not AWS operation errors
 			// The test will fail at validation, which is what we want
-			if tt.wantErrSubstr != "" {
-				// Note: Some errors might occur during execution, not just validation
-				// This is acceptable as long as we're testing the validation logic
-			}
+			// Note: Some errors might occur during execution, not just validation
+			// This is acceptable as long as we're testing the validation logic
 		})
 	}
 }

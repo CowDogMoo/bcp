@@ -85,12 +85,7 @@ func TestGetBucketNamesReturnType(t *testing.T) {
 		t.Error("GetBucketNames() returned (nil, nil), expected at least one non-nil value")
 	}
 
-	// If buckets is not nil, it should be a slice
-	if buckets != nil {
-		if len(buckets) < 0 {
-			t.Error("GetBucketNames() returned invalid slice length")
-		}
-	}
+	// If buckets is not nil, it should be a slice (no further validation needed)
 }
 
 func TestGetInstanceIDsReturnType(t *testing.T) {
@@ -105,12 +100,7 @@ func TestGetInstanceIDsReturnType(t *testing.T) {
 		t.Error("GetInstanceIDs() returned (nil, nil), expected at least one non-nil value")
 	}
 
-	// If instances is not nil, it should be a slice
-	if instances != nil {
-		if len(instances) < 0 {
-			t.Error("GetInstanceIDs() returned invalid slice length")
-		}
-	}
+	// If instances is not nil, it should be a slice (no further validation needed)
 }
 
 func TestGetBucketNamesErrorHandling(t *testing.T) {

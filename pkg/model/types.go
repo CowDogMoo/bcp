@@ -29,6 +29,7 @@ type TransferConfig struct {
 	BucketName    string
 	MaxRetries    int
 	RetryDelay    int
+	IsDirectory   bool
 }
 
 type AWSConfig struct {

@@ -62,7 +62,12 @@ func Execute(config model.TransferConfig) error {
 	log.Info("AWS CLI is installed on remote instance")
 
 	log.Info("Downloading from S3 to remote instance...")
-	downloadCommand := fmt.Sprintf("aws s3 cp %s %s --recursive", s3URL, config.Destination)
+	var downloadCommand string
+	if config.IsDirectory {
+		downloadCommand = fmt.Sprintf("aws s3 cp %s %s --recursive", s3URL, config.Destination)
+	} else {
+		downloadCommand = fmt.Sprintf("aws s3 cp %s %s", s3URL, config.Destination)
+	}
 	if err := retryOperation(func() error {
 		_, err := ssm.RunCommand(ssmConnection.Client, config.SSMInstanceID, []string{downloadCommand})
 		return err
@@ -121,6 +126,16 @@ func isRetryableError(err error) bool {
 	}
 
 	if awsErr, ok := err.(awserr.Error); ok {
+		// Check for non-retryable permission/authentication errors first
+		switch awsErr.Code() {
+		case "AccessDenied", "AccessDeniedException", "UnauthorizedAccess",
+			"Forbidden", "InvalidAccessKeyId", "SignatureDoesNotMatch",
+			"UnrecognizedClientException", "InvalidClientTokenId",
+			"ExpiredToken", "ExpiredTokenException", "InvalidToken":
+			return false
+		}
+
+		// Check for retryable errors
 		switch awsErr.Code() {
 		case "RequestTimeout", "ServiceUnavailable", "ThrottlingException",
 			"RequestLimitExceeded", "TooManyRequestsException", "InternalError",
@@ -130,6 +145,24 @@ func isRetryableError(err error) bool {
 	}
 
 	errStr := err.Error()
+
+	// Check for non-retryable permission strings
+	nonRetryableStrings := []string{
+		"access denied",
+		"unauthorized",
+		"forbidden",
+		"invalid credentials",
+		"permission denied",
+		"not authorized",
+	}
+
+	for _, nonRetryable := range nonRetryableStrings {
+		if strings.Contains(strings.ToLower(errStr), strings.ToLower(nonRetryable)) {
+			return false
+		}
+	}
+
+	// Check for retryable errors
 	retryableStrings := []string{
 		"connection reset",
 		"connection refused",

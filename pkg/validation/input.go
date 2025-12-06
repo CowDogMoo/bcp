@@ -30,9 +30,9 @@ import (
 	"strings"
 )
 
-func ValidateSourcePath(path string) error {
+func ValidateSourcePath(path string) (bool, error) {
 	if path == "" {
-		return fmt.Errorf("source path cannot be empty")
+		return false, fmt.Errorf("source path cannot be empty")
 	}
 
 	cleanPath := filepath.Clean(path)
@@ -40,16 +40,16 @@ func ValidateSourcePath(path string) error {
 	info, err := os.Stat(cleanPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("source path does not exist: %s", cleanPath)
+			return false, fmt.Errorf("source path does not exist: %s", cleanPath)
 		}
-		return fmt.Errorf("failed to access source path: %w", err)
+		return false, fmt.Errorf("failed to access source path: %w", err)
 	}
 
 	if !info.Mode().IsDir() && !info.Mode().IsRegular() {
-		return fmt.Errorf("source path is not a regular file or directory: %s", cleanPath)
+		return false, fmt.Errorf("source path is not a regular file or directory: %s", cleanPath)
 	}
 
-	return nil
+	return info.Mode().IsDir(), nil
 }
 
 func ValidateSSMPath(ssmPath string) (instanceID string, destination string, err error) {

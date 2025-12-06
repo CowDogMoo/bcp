@@ -55,7 +55,7 @@ func TestValidateSourcePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateSourcePath(tt.path)
+			_, err := ValidateSourcePath(tt.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ValidateSourcePath() error = %v, wantErr %v", err, tt.wantErr)
 			}

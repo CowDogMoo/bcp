@@ -179,7 +179,7 @@ func listSSMInstances(sess *session.Session) error {
 		ipAddress := aws.StringValue(inst.IPAddress)
 		name := aws.StringValue(inst.ComputerName)
 
-		statusStr := status
+		var statusStr string
 		if status == "Online" {
 			statusStr = "\033[32m" + status + "\033[0m" // green
 		} else {
@@ -230,12 +230,13 @@ func listAllInstances(sess *session.Session) error {
 				}
 			}
 
-			stateStr := state
-			if state == "running" {
+			var stateStr string
+			switch state {
+			case "running":
 				stateStr = "\033[32m" + state + "\033[0m" // green
-			} else if state == "stopped" {
+			case "stopped":
 				stateStr = "\033[33m" + state + "\033[0m" // yellow
-			} else {
+			default:
 				stateStr = "\033[31m" + state + "\033[0m" // red
 			}
 

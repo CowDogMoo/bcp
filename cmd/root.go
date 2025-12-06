@@ -76,7 +76,8 @@ Example:
 			sourceDirectory := args[0]
 			ssmPath := args[1]
 
-			if err := validation.ValidateSourcePath(sourceDirectory); err != nil {
+			isDirectory, err := validation.ValidateSourcePath(sourceDirectory)
+			if err != nil {
 				return fmt.Errorf("invalid source path: %w", err)
 			}
 
@@ -104,6 +105,7 @@ Example:
 				BucketName:    bucketName,
 				MaxRetries:    config.MaxRetries,
 				RetryDelay:    config.RetryDelay,
+				IsDirectory:   isDirectory,
 			}
 
 			if err := transfer.Execute(transferConfig); err != nil {

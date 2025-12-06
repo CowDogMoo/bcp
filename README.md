@@ -29,6 +29,7 @@ bcp [source] [ssm_instance_id:destination] --bucket BUCKET_NAME
 ```
 
 **Arguments:**
+
 - `source`: Local directory or file path to upload
 - `ssm_instance_id:destination`: SSM instance ID and remote destination path (format: `i-xxxxxxxxx:/path/to/dest`)
 
@@ -120,6 +121,7 @@ See `cmd/config/config.yaml` for a complete example.
 Enable autocomplete for bucket names, instance IDs, and common paths:
 
 **Bash:**
+
 ```bash
 # One-time setup (Linux)
 bcp completion bash | sudo tee /etc/bash_completion.d/bcp
@@ -132,6 +134,7 @@ source <(bcp completion bash)
 ```
 
 **Zsh:**
+
 ```bash
 # Enable completion system (if not already enabled)
 echo "autoload -U compinit; compinit" >> ~/.zshrc
@@ -144,6 +147,7 @@ source ~/.zshrc
 ```
 
 **Fish:**
+
 ```bash
 # One-time setup
 bcp completion fish > ~/.config/fish/completions/bcp.fish
@@ -153,7 +157,8 @@ source ~/.config/fish/completions/bcp.fish
 ```
 
 **Completion Features:**
-- ` bcp --bucket <TAB>` - Autocomplete S3 bucket names
+
+- `bcp --bucket <TAB>` - Autocomplete S3 bucket names
 - `bcp file.txt <TAB>` - Autocomplete SSM instance IDs
 - `bcp file.txt i-xxx:<TAB>` - Suggest common destination paths (/tmp/, /home/ec2-user/, /opt/, etc.)
 

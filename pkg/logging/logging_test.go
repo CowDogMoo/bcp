@@ -245,10 +245,8 @@ func TestLoggingFunctions(t *testing.T) {
 				if !strings.Contains(output, tt.message) {
 					t.Errorf("Log output does not contain expected message: %s", output)
 				}
-			} else {
-				if output != "" {
-					t.Errorf("Expected no log output but got: %s", output)
-				}
+			} else if output != "" {
+				t.Errorf("Expected no log output but got: %s", output)
 			}
 		})
 	}
