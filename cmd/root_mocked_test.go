@@ -61,14 +61,22 @@ func TestBucketCompletion_NoAWS(t *testing.T) {
 	// Clear AWS credentials to force error
 	oldAccessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	oldProfile := os.Getenv("AWS_PROFILE")
-	os.Unsetenv("AWS_ACCESS_KEY_ID")
-	os.Unsetenv("AWS_PROFILE")
+	if err := os.Unsetenv("AWS_ACCESS_KEY_ID"); err != nil {
+		t.Fatalf("Failed to unset AWS_ACCESS_KEY_ID: %v", err)
+	}
+	if err := os.Unsetenv("AWS_PROFILE"); err != nil {
+		t.Fatalf("Failed to unset AWS_PROFILE: %v", err)
+	}
 	defer func() {
 		if oldAccessKey != "" {
-			os.Setenv("AWS_ACCESS_KEY_ID", oldAccessKey)
+			if err := os.Setenv("AWS_ACCESS_KEY_ID", oldAccessKey); err != nil {
+				t.Errorf("Failed to restore AWS_ACCESS_KEY_ID: %v", err)
+			}
 		}
 		if oldProfile != "" {
-			os.Setenv("AWS_PROFILE", oldProfile)
+			if err := os.Setenv("AWS_PROFILE", oldProfile); err != nil {
+				t.Errorf("Failed to restore AWS_PROFILE: %v", err)
+			}
 		}
 	}()
 
@@ -87,14 +95,22 @@ func TestInstanceCompletion_NoAWS(t *testing.T) {
 	// Clear AWS credentials to force error
 	oldAccessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	oldProfile := os.Getenv("AWS_PROFILE")
-	os.Unsetenv("AWS_ACCESS_KEY_ID")
-	os.Unsetenv("AWS_PROFILE")
+	if err := os.Unsetenv("AWS_ACCESS_KEY_ID"); err != nil {
+		t.Fatalf("Failed to unset AWS_ACCESS_KEY_ID: %v", err)
+	}
+	if err := os.Unsetenv("AWS_PROFILE"); err != nil {
+		t.Fatalf("Failed to unset AWS_PROFILE: %v", err)
+	}
 	defer func() {
 		if oldAccessKey != "" {
-			os.Setenv("AWS_ACCESS_KEY_ID", oldAccessKey)
+			if err := os.Setenv("AWS_ACCESS_KEY_ID", oldAccessKey); err != nil {
+				t.Errorf("Failed to restore AWS_ACCESS_KEY_ID: %v", err)
+			}
 		}
 		if oldProfile != "" {
-			os.Setenv("AWS_PROFILE", oldProfile)
+			if err := os.Setenv("AWS_PROFILE", oldProfile); err != nil {
+				t.Errorf("Failed to restore AWS_PROFILE: %v", err)
+			}
 		}
 	}()
 
@@ -126,14 +142,22 @@ func TestArgsCompletion_SecondArg_WithoutColon(t *testing.T) {
 	// Clear AWS credentials to test without actual API calls
 	oldAccessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	oldProfile := os.Getenv("AWS_PROFILE")
-	os.Unsetenv("AWS_ACCESS_KEY_ID")
-	os.Unsetenv("AWS_PROFILE")
+	if err := os.Unsetenv("AWS_ACCESS_KEY_ID"); err != nil {
+		t.Fatalf("Failed to unset AWS_ACCESS_KEY_ID: %v", err)
+	}
+	if err := os.Unsetenv("AWS_PROFILE"); err != nil {
+		t.Fatalf("Failed to unset AWS_PROFILE: %v", err)
+	}
 	defer func() {
 		if oldAccessKey != "" {
-			os.Setenv("AWS_ACCESS_KEY_ID", oldAccessKey)
+			if err := os.Setenv("AWS_ACCESS_KEY_ID", oldAccessKey); err != nil {
+				t.Errorf("Failed to restore AWS_ACCESS_KEY_ID: %v", err)
+			}
 		}
 		if oldProfile != "" {
-			os.Setenv("AWS_PROFILE", oldProfile)
+			if err := os.Setenv("AWS_PROFILE", oldProfile); err != nil {
+				t.Errorf("Failed to restore AWS_PROFILE: %v", err)
+			}
 		}
 	}()
 

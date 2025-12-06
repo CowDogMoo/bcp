@@ -81,7 +81,11 @@ func TestExecuteWithClients_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
@@ -132,7 +136,11 @@ func TestExecuteWithClients_S3UploadFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
@@ -169,7 +177,11 @@ func TestExecuteWithClients_AWSCLINotInstalled(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
@@ -217,7 +229,11 @@ func TestExecuteWithClients_SSMDownloadFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
@@ -274,7 +290,11 @@ func TestUploadFile_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
@@ -315,7 +335,11 @@ func TestUploadFile_S3Error(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
@@ -340,7 +364,11 @@ func TestUploadDirectory_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Create subdirectory and files
 	subDir := filepath.Join(tmpDir, "subdir")
@@ -381,7 +409,11 @@ func TestUploadToS3_File(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
@@ -402,7 +434,11 @@ func TestUploadToS3_Directory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
 	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
@@ -657,7 +693,11 @@ func TestExecuteWithClients_DirectoryUpload(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
 
 	subDir := filepath.Join(tmpDir, "subdir")
 	if err := os.Mkdir(subDir, 0755); err != nil {
@@ -807,5 +847,144 @@ func TestIsRetryableError_NonRetryablePermissions(t *testing.T) {
 				t.Errorf("isRetryableError(%v) = %v, want %v", tt.err, result, tt.expected)
 			}
 		})
+	}
+}
+
+func TestRunSSMCommand_Timeout(t *testing.T) {
+	// Test the timeout scenario where GetCommandInvocation keeps returning InProgress
+	mockSSM := &mockSSMClient{
+		sendCommandFunc: func(ctx context.Context, params *ssm.SendCommandInput, optFns ...func(*ssm.Options)) (*ssm.SendCommandOutput, error) {
+			return &ssm.SendCommandOutput{
+				Command: &types.Command{
+					CommandId: aws.String("test-command-id"),
+				},
+			}, nil
+		},
+		getCommandInvocationFunc: func(ctx context.Context, params *ssm.GetCommandInvocationInput, optFns ...func(*ssm.Options)) (*ssm.GetCommandInvocationOutput, error) {
+			// Keep returning InProgress to trigger timeout
+			return &ssm.GetCommandInvocationOutput{
+				Status: types.CommandInvocationStatusInProgress,
+			}, nil
+		},
+	}
+
+	ctx := context.Background()
+	_, err := runSSMCommand(ctx, mockSSM, "i-1234567890abcdef0", []string{"echo test"})
+	if err == nil {
+		t.Error("Expected timeout error")
+	}
+	if !errors.Is(err, errors.New("command timed out waiting for completion")) && err.Error() != "command timed out waiting for completion" {
+		t.Errorf("Expected timeout error, got: %v", err)
+	}
+}
+
+func TestUploadDirectory_NestedStructure(t *testing.T) {
+	// Test with deeply nested directory structure
+	tmpDir, err := os.MkdirTemp("", "bcp-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
+
+	// Create nested directory structure
+	nestedDir := filepath.Join(tmpDir, "level1", "level2")
+	if err := os.MkdirAll(nestedDir, 0755); err != nil {
+		t.Fatalf("Failed to create nested dir: %v", err)
+	}
+
+	// Create files at different levels
+	file1 := filepath.Join(tmpDir, "root.txt")
+	file2 := filepath.Join(tmpDir, "level1", "mid.txt")
+	file3 := filepath.Join(nestedDir, "deep.txt")
+
+	if err := os.WriteFile(file1, []byte("root"), 0644); err != nil {
+		t.Fatalf("Failed to create file1: %v", err)
+	}
+	if err := os.WriteFile(file2, []byte("mid"), 0644); err != nil {
+		t.Fatalf("Failed to create file2: %v", err)
+	}
+	if err := os.WriteFile(file3, []byte("deep"), 0644); err != nil {
+		t.Fatalf("Failed to create file3: %v", err)
+	}
+
+	var uploadedKeys []string
+	mockS3 := &mockS3Client{
+		putObjectFunc: func(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
+			uploadedKeys = append(uploadedKeys, aws.ToString(params.Key))
+			return &s3.PutObjectOutput{}, nil
+		},
+	}
+
+	ctx := context.Background()
+	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir)
+	if err != nil {
+		t.Errorf("uploadDirectory() error = %v", err)
+	}
+
+	// Verify all files were uploaded
+	if len(uploadedKeys) != 3 {
+		t.Errorf("Expected 3 files uploaded, got %d", len(uploadedKeys))
+	}
+}
+
+func TestUploadDirectory_UploadError(t *testing.T) {
+	// Test that errors during file upload are propagated
+	tmpDir, err := os.MkdirTemp("", "bcp-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
+
+	testFile := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("content"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	mockS3 := &mockS3Client{
+		putObjectFunc: func(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
+			return nil, errors.New("upload error")
+		},
+	}
+
+	ctx := context.Background()
+	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir)
+	if err == nil {
+		t.Error("Expected error from upload failure")
+	}
+}
+
+func TestCheckAWSCLIInstalled_OutputWithoutAWS(t *testing.T) {
+	// Test when output doesn't contain "/aws"
+	mockSSM := &mockSSMClient{
+		sendCommandFunc: func(ctx context.Context, params *ssm.SendCommandInput, optFns ...func(*ssm.Options)) (*ssm.SendCommandOutput, error) {
+			return &ssm.SendCommandOutput{
+				Command: &types.Command{
+					CommandId: aws.String("test-command-id"),
+				},
+			}, nil
+		},
+		getCommandInvocationFunc: func(ctx context.Context, params *ssm.GetCommandInvocationInput, optFns ...func(*ssm.Options)) (*ssm.GetCommandInvocationOutput, error) {
+			return &ssm.GetCommandInvocationOutput{
+				Status:                types.CommandInvocationStatusSuccess,
+				StandardOutputContent: aws.String("/usr/bin/something"),
+			}, nil
+		},
+	}
+
+	ctx := context.Background()
+	installed, err := checkAWSCLIInstalled(ctx, mockSSM, "i-1234567890abcdef0")
+	if err != nil {
+		t.Errorf("checkAWSCLIInstalled() error = %v", err)
+	}
+	if installed {
+		t.Error("Expected AWS CLI to not be detected when output doesn't contain '/aws'")
 	}
 }
