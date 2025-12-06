@@ -196,11 +196,12 @@ func runSSMCommand(ctx context.Context, client *ssm.Client, instanceID string, c
 		}
 
 		status := invocationOutput.Status
-		if status == types.CommandInvocationStatusSuccess {
+		switch status {
+		case types.CommandInvocationStatusSuccess:
 			return aws.ToString(invocationOutput.StandardOutputContent), nil
-		} else if status == types.CommandInvocationStatusFailed ||
-			status == types.CommandInvocationStatusCancelled ||
-			status == types.CommandInvocationStatusTimedOut {
+		case types.CommandInvocationStatusFailed,
+			types.CommandInvocationStatusCancelled,
+			types.CommandInvocationStatusTimedOut:
 			stderr := aws.ToString(invocationOutput.StandardErrorContent)
 			return "", fmt.Errorf("command failed with status %s: %s", status, stderr)
 		}
