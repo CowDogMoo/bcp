@@ -72,9 +72,9 @@ func TestCompletionCmdArgs(t *testing.T) {
 }
 
 func TestCompletionCmdRun(t *testing.T) {
-	// Verify Run function is defined
-	if completionCmd.Run == nil {
-		t.Error("completionCmd.Run is nil, expected a Run function")
+	// Verify RunE function is defined
+	if completionCmd.RunE == nil {
+		t.Error("completionCmd.RunE is nil, expected a RunE function")
 	}
 }
 
@@ -136,8 +136,8 @@ func TestCompletionCmdStructure(t *testing.T) {
 		},
 		{
 			name:     "has Run function",
-			check:    func() bool { return completionCmd.Run != nil },
-			errorMsg: "completionCmd.Run is nil",
+			check:    func() bool { return completionCmd.RunE != nil },
+			errorMsg: "completionCmd.RunE is nil",
 		},
 		{
 			name:     "has ValidArgs",
@@ -164,7 +164,7 @@ func TestCompletionCmdBashExecution(t *testing.T) {
 		}
 	}()
 
-	completionCmd.Run(completionCmd, []string{"bash"})
+	_ = completionCmd.RunE(completionCmd, []string{"bash"})
 }
 
 func TestCompletionCmdZshExecution(t *testing.T) {
@@ -175,7 +175,7 @@ func TestCompletionCmdZshExecution(t *testing.T) {
 		}
 	}()
 
-	completionCmd.Run(completionCmd, []string{"zsh"})
+	_ = completionCmd.RunE(completionCmd, []string{"zsh"})
 }
 
 func TestCompletionCmdFishExecution(t *testing.T) {
@@ -186,7 +186,7 @@ func TestCompletionCmdFishExecution(t *testing.T) {
 		}
 	}()
 
-	completionCmd.Run(completionCmd, []string{"fish"})
+	_ = completionCmd.RunE(completionCmd, []string{"fish"})
 }
 
 func TestCompletionCmdPowershellExecution(t *testing.T) {
@@ -197,5 +197,5 @@ func TestCompletionCmdPowershellExecution(t *testing.T) {
 		}
 	}()
 
-	completionCmd.Run(completionCmd, []string{"powershell"})
+	_ = completionCmd.RunE(completionCmd, []string{"powershell"})
 }

@@ -67,7 +67,7 @@ func TestRootCmdFlags(t *testing.T) {
 
 	quietFlag := rootCmd.PersistentFlags().Lookup("quiet")
 	if quietFlag == nil {
-		t.Error("quiet flag not registered")
+		t.Fatal("quiet flag not registered")
 	}
 	if quietFlag.Shorthand != "q" {
 		t.Errorf("quiet flag shorthand = %v, want 'q'", quietFlag.Shorthand)
