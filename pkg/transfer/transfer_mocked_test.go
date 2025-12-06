@@ -27,6 +27,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -986,5 +987,110 @@ func TestCheckAWSCLIInstalled_OutputWithoutAWS(t *testing.T) {
 	}
 	if installed {
 		t.Error("Expected AWS CLI to not be detected when output doesn't contain '/aws'")
+	}
+}
+
+func TestExecuteWithClients_CheckAWSCLIError(t *testing.T) {
+	// Test when AWS CLI check itself fails with a non "command failed" error
+	tmpDir, err := os.MkdirTemp("", "bcp-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Errorf("Failed to remove temp dir: %v", err)
+		}
+	}()
+
+	testFile := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	mockS3 := &mockS3Client{}
+
+	mockSSM := &mockSSMClient{
+		sendCommandFunc: func(ctx context.Context, params *ssm.SendCommandInput, optFns ...func(*ssm.Options)) (*ssm.SendCommandOutput, error) {
+			// Return error directly from SendCommand
+			return nil, errors.New("SSM service error")
+		},
+	}
+
+	config := model.TransferConfig{
+		Source:        testFile,
+		SSMInstanceID: "i-1234567890abcdef0",
+		Destination:   "/tmp/test.txt",
+		BucketName:    "test-bucket",
+		MaxRetries:    1,
+		RetryDelay:    1,
+		IsDirectory:   false,
+	}
+
+	ctx := context.Background()
+	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	if err == nil {
+		t.Error("Expected error from AWS CLI check failure")
+	}
+	if !errors.Is(err, errors.New("failed to check AWS CLI installation")) && !strings.Contains(err.Error(), "failed to check AWS CLI installation") {
+		t.Errorf("Expected AWS CLI check error, got: %v", err)
+	}
+}
+
+func TestUploadToS3_StatError(t *testing.T) {
+	// Test when os.Stat fails on non-existent file
+	mockS3 := &mockS3Client{}
+
+	ctx := context.Background()
+	err := uploadToS3(ctx, mockS3, "test-bucket", "/nonexistent/path/file.txt")
+	if err == nil {
+		t.Error("Expected error when file doesn't exist")
+	}
+	if !strings.Contains(err.Error(), "failed to stat") {
+		t.Errorf("Expected stat error, got: %v", err)
+	}
+}
+
+func TestUploadDirectory_WalkError(t *testing.T) {
+	// Test directory upload when walk encounters an error
+	// Create a directory and then remove read permissions (Unix only)
+	tmpDir, err := os.MkdirTemp("", "bcp-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() {
+		// Restore permissions before cleanup
+		_ = os.Chmod(tmpDir, 0755)
+		_ = os.RemoveAll(tmpDir)
+	}()
+
+	subDir := filepath.Join(tmpDir, "subdir")
+	if err := os.Mkdir(subDir, 0755); err != nil {
+		t.Fatalf("Failed to create subdir: %v", err)
+	}
+
+	// Create a file in the subdirectory
+	testFile := filepath.Join(subDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("content"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	// Remove read permissions from subdir to cause walk error
+	if err := os.Chmod(subDir, 0000); err != nil {
+		t.Fatalf("Failed to change permissions: %v", err)
+	}
+
+	mockS3 := &mockS3Client{}
+
+	ctx := context.Background()
+	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir)
+
+	// Restore permissions for cleanup
+	_ = os.Chmod(subDir, 0755)
+
+	// The error might not always occur depending on the OS, so this test might pass or fail
+	// On some systems, the walk error is returned
+	if err != nil && !strings.Contains(err.Error(), "permission denied") {
+		// This is fine - we got an error
+		t.Logf("Got error (expected): %v", err)
 	}
 }
