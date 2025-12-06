@@ -1,7 +1,4 @@
-#!/bin/bash
-set -ex
-
-copyright_header='/*
+/*
 Copyright © 2025 Jayson Grace <jayson.e.grace@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,38 +18,38 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-*/'
+*/
 
-echo "Starting copyright check..."
+package model
 
-update_copyright() {
-	local file="$1"
-	local temp_file
-	temp_file=$(mktemp)
-	echo "${copyright_header}" >"${temp_file}"
-	echo "" >>"${temp_file}" # Add an empty line after the header
-	sed '/^\/\*/,/^\*\//d' "$file" | sed '/./,$!d' >>"${temp_file}"
-	mv "${temp_file}" "${file}"
+type TransferConfig struct {
+	Source        string
+	SSMInstanceID string
+	Destination   string
+	BucketName    string
+	MaxRetries    int
+	RetryDelay    int
+	IsDirectory   bool
 }
 
-# Get the list of staged .go files
-staged_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || true)
+type AWSConfig struct {
+	Region  string
+	Profile string
+	Bucket  string
+}
 
-# Check if there are any staged .go files
-if [[ -z "$staged_files" ]]; then
-	echo "No .go files staged for commit. Exiting."
-	exit 0
-fi
+type LogConfig struct {
+	Format string
+	Level  string
+}
 
-for file in $staged_files; do
-	echo "Checking file: $file"
-	if grep -qF "Copyright © 2025 Jayson Grace" "$file"; then
-		echo "Current copyright header is up-to-date in $file"
-	else
-		echo "Updating copyright header in $file"
-		update_copyright "$file"
-		echo "Copyright header updated in $file"
-	fi
-done
+type Config struct {
+	AWS      AWSConfig        `yaml:"aws"`
+	Log      LogConfig        `yaml:"log"`
+	Transfer TransferDefaults `yaml:"transfer"`
+}
 
-echo "Copyright check completed."
+type TransferDefaults struct {
+	MaxRetries int `yaml:"max_retries"`
+	RetryDelay int `yaml:"retry_delay"`
+}

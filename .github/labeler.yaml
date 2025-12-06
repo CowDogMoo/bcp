@@ -1,0 +1,20 @@
+---
+area/github:
+  - ".github/**/*"
+
+area/pre-commit:
+  - ".pre-commit-config.yaml"
+  - ".hooks/**/*"
+
+area/cmd:
+  - "cmd/**/*"
+
+area/pkg:
+  - "pkg/**/*"
+
+area/taskfiles:
+  - "Taskfile.yaml"
+
+area/go-mod-sum:
+  - "go.mod"
+  - "go.sum"
