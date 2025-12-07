@@ -85,6 +85,46 @@ func ValidateSSMPath(ssmPath string) (instanceID string, destination string, err
 	return instanceID, destination, nil
 }
 
+func ValidateDestinationPath(path string) error {
+	if path == "" {
+		return fmt.Errorf("destination path cannot be empty")
+	}
+
+	cleanPath := filepath.Clean(path)
+
+	// Check if path exists
+	info, err := os.Stat(cleanPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Path doesn't exist, check if parent directory exists
+			parentDir := filepath.Dir(cleanPath)
+			if parentDir != "" && parentDir != "." {
+				parentInfo, parentErr := os.Stat(parentDir)
+				if parentErr != nil {
+					if os.IsNotExist(parentErr) {
+						return fmt.Errorf("parent directory does not exist: %s", parentDir)
+					}
+					return fmt.Errorf("failed to access parent directory: %w", parentErr)
+				}
+				if !parentInfo.IsDir() {
+					return fmt.Errorf("parent path is not a directory: %s", parentDir)
+				}
+			}
+			// Parent exists or path is in current directory, so it's valid
+			return nil
+		}
+		return fmt.Errorf("failed to access destination path: %w", err)
+	}
+
+	// Path exists, check if it's a directory or if we can write to parent
+	if info.IsDir() {
+		return nil
+	}
+
+	// If it's a file, we'll overwrite it, which is fine
+	return nil
+}
+
 func ValidateBucketName(bucket string) error {
 	if bucket == "" {
 		return fmt.Errorf("bucket name cannot be empty")
