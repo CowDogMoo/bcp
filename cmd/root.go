@@ -61,29 +61,64 @@ func Execute() {
 
 func RootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "bcp [sourceDirectory] [ssmPath]",
-		Short: "bcp copies files/directories to an SSM instance via S3",
+		Use:   "bcp [source] [destination]",
+		Short: "bcp copies files/directories to/from an SSM instance via S3",
 		Long: `bcp (Blob Copy) is a command-line tool that provides SCP-like functionality
 for cloud systems using a blob store. It allows you to upload files to an
-S3 bucket and download files from the bucket to a remote instance via
+S3 bucket and download files from the bucket to/from a remote instance via
 AWS Systems Manager (SSM).
 
-Example:
-  bcp ./my-files i-1234567890abcdef0:/home/ec2-user/files --bucket my-bucket`,
+Examples:
+  # Copy TO remote instance
+  bcp ./my-files i-1234567890abcdef0:/home/ec2-user/files --bucket my-bucket
+
+  # Copy FROM remote instance
+  bcp i-1234567890abcdef0:/home/ec2-user/files ./my-files --bucket my-bucket`,
 		Args:              cobra.ExactArgs(2),
 		ValidArgsFunction: argsCompletion,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			sourceDirectory := args[0]
-			ssmPath := args[1]
+			arg0 := args[0]
+			arg1 := args[1]
 
-			isDirectory, err := validation.ValidateSourcePath(sourceDirectory)
-			if err != nil {
-				return fmt.Errorf("invalid source path: %w", err)
-			}
+			// Determine transfer direction
+			var direction model.TransferDirection
+			var source, destination, ssmInstanceID string
+			var isDirectory bool
+			var err error
 
-			ssmInstanceID, destinationDirectory, err := validation.ValidateSSMPath(ssmPath)
-			if err != nil {
-				return fmt.Errorf("invalid SSM path: %w", err)
+			// Determine transfer direction based on which argument contains instance ID
+			switch {
+			case strings.Contains(arg0, ":"):
+				parts := strings.SplitN(arg0, ":", 2)
+				if len(parts) == 2 && strings.HasPrefix(parts[0], "i-") {
+					// FROM remote: i-xxx:/remote/path -> /local/path
+					direction = model.FromRemote
+					ssmInstanceID, source, err = validation.ValidateSSMPath(arg0)
+					if err != nil {
+						return fmt.Errorf("invalid SSM path: %w", err)
+					}
+					destination = arg1
+					if err := validation.ValidateDestinationPath(destination); err != nil {
+						return fmt.Errorf("invalid destination path: %w", err)
+					}
+					isDirectory = false // Will be determined on remote
+				} else {
+					return fmt.Errorf("invalid argument format")
+				}
+			case strings.Contains(arg1, ":"):
+				// TO remote: /local/path -> i-xxx:/remote/path
+				direction = model.ToRemote
+				isDirectory, err = validation.ValidateSourcePath(arg0)
+				if err != nil {
+					return fmt.Errorf("invalid source path: %w", err)
+				}
+				source = arg0
+				ssmInstanceID, destination, err = validation.ValidateSSMPath(arg1)
+				if err != nil {
+					return fmt.Errorf("invalid SSM path: %w", err)
+				}
+			default:
+				return fmt.Errorf("invalid arguments: expected format 'source i-xxx:destination' or 'i-xxx:source destination'")
 			}
 
 			bucketName := bucket
@@ -99,13 +134,14 @@ Example:
 			}
 
 			transferConfig := model.TransferConfig{
-				Source:        sourceDirectory,
+				Source:        source,
 				SSMInstanceID: ssmInstanceID,
-				Destination:   destinationDirectory,
+				Destination:   destination,
 				BucketName:    bucketName,
 				MaxRetries:    config.MaxRetries,
 				RetryDelay:    config.RetryDelay,
 				IsDirectory:   isDirectory,
+				Direction:     direction,
 			}
 
 			if err := transfer.Execute(transferConfig); err != nil {

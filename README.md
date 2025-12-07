@@ -10,10 +10,11 @@
 [![Renovate](https://github.com/CowDogMoo/bcp/actions/workflows/renovate.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/renovate.yaml)
 
 `bcp` (Blob Copy) provides SCP-like functionality for copying files
-to EC2 instances through S3 and AWS Systems Manager (SSM).
+to and from EC2 instances through S3 and AWS Systems Manager (SSM).
 
 ## Features
 
+- **Bidirectional Transfer**: Copy files both TO and FROM EC2 instances
 - **Resource Discovery**: List available S3 buckets and SSM-managed EC2 instances
 - **Robust Error Handling**: Retry logic with exponential backoff for transient failures
 - **Input Validation**: Comprehensive validation of paths, instance IDs,
@@ -21,21 +22,35 @@ to EC2 instances through S3 and AWS Systems Manager (SSM).
 - **Structured Logging**: Configurable logging with multiple levels
   (debug, info, warn, error)
 - **Configuration File Support**: YAML-based configuration with sensible defaults
-- **Progress Reporting**: Clear progress messages during uploads and downloads
+- **Progress Reporting**: Clear progress messages during uploads and
+  downloads
+- **Automatic Cleanup**: S3 objects are automatically cleaned up after
+  successful transfers
 
 ## Usage
 
 ### Copy Files
 
+**Copy TO remote instance:**
+
 ```shell
-bcp [source] [ssm_instance_id:destination] --bucket BUCKET_NAME
+bcp [local_source] [ssm_instance_id:remote_destination] --bucket BUCKET_NAME
+```
+
+**Copy FROM remote instance:**
+
+```shell
+bcp [ssm_instance_id:remote_source] [local_destination] --bucket BUCKET_NAME
 ```
 
 **Arguments:**
 
-- `source`: Local directory or file path to upload
-- `ssm_instance_id:destination`: SSM instance ID and remote destination
-  path (format: `i-xxxxxxxxx:/path/to/dest`)
+- `local_source`: Local directory or file path to upload (when copying TO
+  remote)
+- `local_destination`: Local directory or file path to download to (when
+  copying FROM remote)
+- `ssm_instance_id:remote_path`: SSM instance ID and remote path (format:
+  `i-xxxxxxxxx:/path/to/file`)
 
 ### List Resources
 
@@ -188,11 +203,17 @@ bcp list instances --region us-east-1
 ### Basic File Transfer
 
 ```shell
-# Copy a directory to an EC2 instance
+# Copy a directory TO an EC2 instance
 bcp ./my-files i-1234567890abcdef0:/home/ec2-user/files --bucket my-bucket
 
-# Copy a single file
+# Copy a single file TO an EC2 instance
 bcp ~/app/binary i-1234567890abcdef0:/usr/local/bin/myapp --bucket my-bucket
+
+# Copy a directory FROM an EC2 instance
+bcp i-1234567890abcdef0:/home/ec2-user/files ./my-files --bucket my-bucket
+
+# Copy a single file FROM an EC2 instance
+bcp i-1234567890abcdef0:/var/log/app.log ./logs/app.log --bucket my-bucket
 ```
 
 ### With Verbose Logging
@@ -223,8 +244,11 @@ bcp ./my-files i-1234567890abcdef0:/home/ec2-user/files --bucket my-bucket --qui
 bcp list buckets
 bcp list instances
 
-# 2. Copy files using discovered resources
+# 2. Copy files TO remote using discovered resources
 bcp ./deployment i-0080bcec99ef6fbf2:/opt/app --bucket dread-infra-alpha-operator-range-dev-us-west-2
+
+# 3. Copy files FROM remote
+bcp i-0080bcec99ef6fbf2:/opt/app/logs ./logs --bucket dread-infra-alpha-operator-range-dev-us-west-2
 ```
 
 ## Development
