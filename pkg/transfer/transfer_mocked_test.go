@@ -100,7 +100,7 @@ func (m *mockSSMClient) GetCommandInvocation(ctx context.Context, params *ssm.Ge
 	}, nil
 }
 
-func TestExecuteWithClients_Success(t *testing.T) {
+func TestExecuteToRemoteWithClients_Success(t *testing.T) {
 	// Create temp directory and file
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
@@ -151,13 +151,13 @@ func TestExecuteWithClients_Success(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err != nil {
-		t.Errorf("ExecuteWithClients() error = %v", err)
+		t.Errorf("ExecuteToRemoteWithClients() error = %v", err)
 	}
 }
 
-func TestExecuteWithClients_S3UploadFailure(t *testing.T) {
+func TestExecuteToRemoteWithClients_S3UploadFailure(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -193,13 +193,13 @@ func TestExecuteWithClients_S3UploadFailure(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err == nil {
 		t.Error("Expected error from S3 upload failure")
 	}
 }
 
-func TestExecuteWithClients_AWSCLINotInstalled(t *testing.T) {
+func TestExecuteToRemoteWithClients_AWSCLINotInstalled(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -246,13 +246,13 @@ func TestExecuteWithClients_AWSCLINotInstalled(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err == nil {
 		t.Error("Expected error when AWS CLI not installed")
 	}
 }
 
-func TestExecuteWithClients_SSMDownloadFailure(t *testing.T) {
+func TestExecuteToRemoteWithClients_SSMDownloadFailure(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -308,7 +308,7 @@ func TestExecuteWithClients_SSMDownloadFailure(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err == nil {
 		t.Error("Expected error from SSM download failure")
 	}
@@ -716,7 +716,7 @@ func TestCheckAWSCLIInstalled_Error(t *testing.T) {
 	}
 }
 
-func TestExecuteWithClients_DirectoryUpload(t *testing.T) {
+func TestExecuteToRemoteWithClients_DirectoryUpload(t *testing.T) {
 	// Create temp directory with files
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
@@ -771,9 +771,9 @@ func TestExecuteWithClients_DirectoryUpload(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err != nil {
-		t.Errorf("ExecuteWithClients() with directory error = %v", err)
+		t.Errorf("ExecuteToRemoteWithClients() with directory error = %v", err)
 	}
 }
 
@@ -1019,7 +1019,7 @@ func TestCheckAWSCLIInstalled_OutputWithoutAWS(t *testing.T) {
 	}
 }
 
-func TestExecuteWithClients_CheckAWSCLIError(t *testing.T) {
+func TestExecuteToRemoteWithClients_CheckAWSCLIError(t *testing.T) {
 	// Test when AWS CLI check itself fails with a non "command failed" error
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
@@ -1057,7 +1057,7 @@ func TestExecuteWithClients_CheckAWSCLIError(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err == nil {
 		t.Error("Expected error from AWS CLI check failure")
 	}

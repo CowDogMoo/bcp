@@ -58,15 +58,6 @@ func Execute(transferConfig model.TransferConfig) error {
 	return ExecuteToRemoteWithClients(ctx, transferConfig, s3Client, ssmClient)
 }
 
-// ExecuteWithClients performs the transfer using provided AWS clients (useful for testing)
-// Deprecated: Use ExecuteToRemoteWithClients or ExecuteFromRemoteWithClients instead
-func ExecuteWithClients(ctx context.Context, transferConfig model.TransferConfig, s3Client S3API, ssmClient SSMAPI) error {
-	if transferConfig.Direction == model.FromRemote {
-		return ExecuteFromRemoteWithClients(ctx, transferConfig, s3Client, ssmClient)
-	}
-	return ExecuteToRemoteWithClients(ctx, transferConfig, s3Client, ssmClient)
-}
-
 // ExecuteToRemoteWithClients performs the transfer from local to remote using provided AWS clients
 func ExecuteToRemoteWithClients(ctx context.Context, transferConfig model.TransferConfig, s3Client S3API, ssmClient SSMAPI) error {
 	log.Info("Starting transfer from %s to %s:%s", transferConfig.Source, transferConfig.SSMInstanceID, transferConfig.Destination)

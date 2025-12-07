@@ -86,8 +86,9 @@ Examples:
 			var isDirectory bool
 			var err error
 
-			// Check if arg0 contains instance ID (FROM remote)
-			if strings.Contains(arg0, ":") {
+			// Determine transfer direction based on which argument contains instance ID
+			switch {
+			case strings.Contains(arg0, ":"):
 				parts := strings.SplitN(arg0, ":", 2)
 				if len(parts) == 2 && strings.HasPrefix(parts[0], "i-") {
 					// FROM remote: i-xxx:/remote/path -> /local/path
@@ -104,7 +105,7 @@ Examples:
 				} else {
 					return fmt.Errorf("invalid argument format")
 				}
-			} else if strings.Contains(arg1, ":") {
+			case strings.Contains(arg1, ":"):
 				// TO remote: /local/path -> i-xxx:/remote/path
 				direction = model.ToRemote
 				isDirectory, err = validation.ValidateSourcePath(arg0)
@@ -116,7 +117,7 @@ Examples:
 				if err != nil {
 					return fmt.Errorf("invalid SSM path: %w", err)
 				}
-			} else {
+			default:
 				return fmt.Errorf("invalid arguments: expected format 'source i-xxx:destination' or 'i-xxx:source destination'")
 			}
 

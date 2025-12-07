@@ -22,8 +22,10 @@ to and from EC2 instances through S3 and AWS Systems Manager (SSM).
 - **Structured Logging**: Configurable logging with multiple levels
   (debug, info, warn, error)
 - **Configuration File Support**: YAML-based configuration with sensible defaults
-- **Progress Reporting**: Clear progress messages during uploads and downloads
-- **Automatic Cleanup**: S3 objects are automatically cleaned up after successful transfers
+- **Progress Reporting**: Clear progress messages during uploads and
+  downloads
+- **Automatic Cleanup**: S3 objects are automatically cleaned up after
+  successful transfers
 
 ## Usage
 
@@ -43,9 +45,12 @@ bcp [ssm_instance_id:remote_source] [local_destination] --bucket BUCKET_NAME
 
 **Arguments:**
 
-- `local_source`: Local directory or file path to upload (when copying TO remote)
-- `local_destination`: Local directory or file path to download to (when copying FROM remote)
-- `ssm_instance_id:remote_path`: SSM instance ID and remote path (format: `i-xxxxxxxxx:/path/to/file`)
+- `local_source`: Local directory or file path to upload (when copying TO
+  remote)
+- `local_destination`: Local directory or file path to download to (when
+  copying FROM remote)
+- `ssm_instance_id:remote_path`: SSM instance ID and remote path (format:
+  `i-xxxxxxxxx:/path/to/file`)
 
 ### List Resources
 
