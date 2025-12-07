@@ -81,6 +81,7 @@ bcp list instances --region us-west-2
 ## Prerequisites
 
 - **Local Machine**:
+
   - Go 1.20+ (for building from source)
   - AWS CLI installed and configured with appropriate credentials
   - IAM permissions for S3 and SSM
@@ -96,22 +97,22 @@ bcp list instances --region us-west-2
 
 1. Clone the repository:
 
-    ```shell
-    git clone https://github.com/cowdogmoo/bcp.git
-    cd bcp
-    ```
+   ```shell
+   git clone https://github.com/cowdogmoo/bcp.git
+   cd bcp
+   ```
 
 2. Build the project:
 
-    ```shell
-    go build -o bcp
-    ```
+   ```shell
+   go build -o bcp
+   ```
 
 3. (Optional) Move to PATH:
 
-    ```shell
-    sudo mv bcp /usr/local/bin/
-    ```
+   ```shell
+   sudo mv bcp /usr/local/bin/
+   ```
 
 ### Configuration
 
@@ -120,17 +121,17 @@ Create a configuration file at `$HOME/.bcp/config.yaml`:
 ```yaml
 ---
 log:
-  format: text  # text, json, or color
-  level: info   # debug, info, warn, error
+  format: text # text, json, or color
+  level: info # debug, info, warn, error
 
 aws:
   region: us-east-1
   profile: default
-  bucket: my-default-bucket  # Optional: default S3 bucket
+  bucket: my-default-bucket # Optional: default S3 bucket
 
 transfer:
-  max_retries: 3    # Maximum retry attempts
-  retry_delay: 2    # Base delay in seconds (exponential backoff)
+  max_retries: 3 # Maximum retry attempts
+  retry_delay: 2 # Base delay in seconds (exponential backoff)
 ```
 
 See `cmd/config/config.yaml` for a complete example.
@@ -245,10 +246,10 @@ bcp list buckets
 bcp list instances
 
 # 2. Copy files TO remote using discovered resources
-bcp ./deployment i-0080bcec99ef6fbf2:/opt/app --bucket dread-infra-alpha-operator-range-dev-us-west-2
+bcp ./deployment i-1234567890abcdef0:/opt/app --bucket my-bucket
 
 # 3. Copy files FROM remote
-bcp i-0080bcec99ef6fbf2:/opt/app/logs ./logs --bucket dread-infra-alpha-operator-range-dev-us-west-2
+bcp i-1234567890abcdef0:/opt/app/logs ./logs --bucket my-bucket
 ```
 
 ## Development
