@@ -30,11 +30,11 @@ import (
 
 func TestRootCmd(t *testing.T) {
 	// Test the package-level rootCmd
-	if rootCmd.Use != "bcp [sourceDirectory] [ssmPath]" {
-		t.Errorf("rootCmd.Use = %v, want %v", rootCmd.Use, "bcp [sourceDirectory] [ssmPath]")
+	if rootCmd.Use != "bcp [source] [destination]" {
+		t.Errorf("rootCmd.Use = %v, want %v", rootCmd.Use, "bcp [source] [destination]")
 	}
 
-	if rootCmd.Short != "bcp copies files/directories to an SSM instance via S3" {
+	if rootCmd.Short != "bcp copies files/directories to/from an SSM instance via S3" {
 		t.Errorf("rootCmd Short description incorrect")
 	}
 }
