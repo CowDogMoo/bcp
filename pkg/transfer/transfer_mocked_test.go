@@ -39,7 +39,10 @@ import (
 
 // Mock S3 client
 type mockS3Client struct {
-	putObjectFunc func(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	putObjectFunc    func(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	getObjectFunc    func(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error)
+	deleteObjectFunc func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+	listObjectsFunc  func(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 }
 
 func (m *mockS3Client) PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
@@ -47,6 +50,27 @@ func (m *mockS3Client) PutObject(ctx context.Context, params *s3.PutObjectInput,
 		return m.putObjectFunc(ctx, params, optFns...)
 	}
 	return &s3.PutObjectOutput{}, nil
+}
+
+func (m *mockS3Client) GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
+	if m.getObjectFunc != nil {
+		return m.getObjectFunc(ctx, params, optFns...)
+	}
+	return &s3.GetObjectOutput{}, nil
+}
+
+func (m *mockS3Client) DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+	if m.deleteObjectFunc != nil {
+		return m.deleteObjectFunc(ctx, params, optFns...)
+	}
+	return &s3.DeleteObjectOutput{}, nil
+}
+
+func (m *mockS3Client) ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error) {
+	if m.listObjectsFunc != nil {
+		return m.listObjectsFunc(ctx, params, optFns...)
+	}
+	return &s3.ListObjectsV2Output{}, nil
 }
 
 // Mock SSM client
@@ -76,7 +100,7 @@ func (m *mockSSMClient) GetCommandInvocation(ctx context.Context, params *ssm.Ge
 	}, nil
 }
 
-func TestExecuteWithClients_Success(t *testing.T) {
+func TestExecuteToRemoteWithClients_Success(t *testing.T) {
 	// Create temp directory and file
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
@@ -123,16 +147,17 @@ func TestExecuteWithClients_Success(t *testing.T) {
 		MaxRetries:    3,
 		RetryDelay:    1,
 		IsDirectory:   false,
+		Direction:     model.ToRemote,
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err != nil {
-		t.Errorf("ExecuteWithClients() error = %v", err)
+		t.Errorf("ExecuteToRemoteWithClients() error = %v", err)
 	}
 }
 
-func TestExecuteWithClients_S3UploadFailure(t *testing.T) {
+func TestExecuteToRemoteWithClients_S3UploadFailure(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -164,16 +189,17 @@ func TestExecuteWithClients_S3UploadFailure(t *testing.T) {
 		MaxRetries:    1,
 		RetryDelay:    1,
 		IsDirectory:   false,
+		Direction:     model.ToRemote,
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err == nil {
 		t.Error("Expected error from S3 upload failure")
 	}
 }
 
-func TestExecuteWithClients_AWSCLINotInstalled(t *testing.T) {
+func TestExecuteToRemoteWithClients_AWSCLINotInstalled(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -216,16 +242,17 @@ func TestExecuteWithClients_AWSCLINotInstalled(t *testing.T) {
 		MaxRetries:    1,
 		RetryDelay:    1,
 		IsDirectory:   false,
+		Direction:     model.ToRemote,
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err == nil {
 		t.Error("Expected error when AWS CLI not installed")
 	}
 }
 
-func TestExecuteWithClients_SSMDownloadFailure(t *testing.T) {
+func TestExecuteToRemoteWithClients_SSMDownloadFailure(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -277,10 +304,11 @@ func TestExecuteWithClients_SSMDownloadFailure(t *testing.T) {
 		MaxRetries:    1,
 		RetryDelay:    1,
 		IsDirectory:   false,
+		Direction:     model.ToRemote,
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err == nil {
 		t.Error("Expected error from SSM download failure")
 	}
@@ -688,7 +716,7 @@ func TestCheckAWSCLIInstalled_Error(t *testing.T) {
 	}
 }
 
-func TestExecuteWithClients_DirectoryUpload(t *testing.T) {
+func TestExecuteToRemoteWithClients_DirectoryUpload(t *testing.T) {
 	// Create temp directory with files
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
@@ -739,12 +767,13 @@ func TestExecuteWithClients_DirectoryUpload(t *testing.T) {
 		MaxRetries:    3,
 		RetryDelay:    1,
 		IsDirectory:   true,
+		Direction:     model.ToRemote,
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err != nil {
-		t.Errorf("ExecuteWithClients() with directory error = %v", err)
+		t.Errorf("ExecuteToRemoteWithClients() with directory error = %v", err)
 	}
 }
 
@@ -990,7 +1019,7 @@ func TestCheckAWSCLIInstalled_OutputWithoutAWS(t *testing.T) {
 	}
 }
 
-func TestExecuteWithClients_CheckAWSCLIError(t *testing.T) {
+func TestExecuteToRemoteWithClients_CheckAWSCLIError(t *testing.T) {
 	// Test when AWS CLI check itself fails with a non "command failed" error
 	tmpDir, err := os.MkdirTemp("", "bcp-test")
 	if err != nil {
@@ -1024,10 +1053,11 @@ func TestExecuteWithClients_CheckAWSCLIError(t *testing.T) {
 		MaxRetries:    1,
 		RetryDelay:    1,
 		IsDirectory:   false,
+		Direction:     model.ToRemote,
 	}
 
 	ctx := context.Background()
-	err = ExecuteWithClients(ctx, config, mockS3, mockSSM)
+	err = ExecuteToRemoteWithClients(ctx, config, mockS3, mockSSM)
 	if err == nil {
 		t.Error("Expected error from AWS CLI check failure")
 	}

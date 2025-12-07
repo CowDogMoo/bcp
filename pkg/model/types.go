@@ -22,6 +22,16 @@ THE SOFTWARE.
 
 package model
 
+// TransferDirection indicates the direction of file transfer
+type TransferDirection string
+
+const (
+	// ToRemote indicates copying from local to remote EC2 instance
+	ToRemote TransferDirection = "to_remote"
+	// FromRemote indicates copying from remote EC2 instance to local
+	FromRemote TransferDirection = "from_remote"
+)
+
 type TransferConfig struct {
 	Source        string
 	SSMInstanceID string
@@ -30,6 +40,7 @@ type TransferConfig struct {
 	MaxRetries    int
 	RetryDelay    int
 	IsDirectory   bool
+	Direction     TransferDirection
 }
 
 type AWSConfig struct {
