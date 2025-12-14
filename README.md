@@ -16,7 +16,8 @@ to and from EC2 instances through S3 and AWS Systems Manager (SSM).
 
 - **Bidirectional Transfer**: Copy files both TO and FROM EC2 instances
 - **Resource Discovery**: List available S3 buckets and SSM-managed EC2 instances
-- **Robust Error Handling**: Retry logic with exponential backoff for transient failures
+- **Robust Error Handling**: Retry logic with exponential backoff for
+  transient failures
 - **Input Validation**: Comprehensive validation of paths, instance IDs,
   and bucket names
 - **Structured Logging**: Configurable logging with multiple levels
