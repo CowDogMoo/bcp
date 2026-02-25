@@ -5,7 +5,7 @@
 [![Pre-Commit](https://github.com/CowDogMoo/bcp/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/pre-commit.yaml)
 [![Tests](https://github.com/CowDogMoo/bcp/actions/workflows/tests.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/tests.yaml)
 [![🚨 Semgrep Analysis](https://github.com/CowDogMoo/bcp/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/semgrep.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/CowDogMoo/bcp/badge.svg?branch=main)](https://coveralls.io/github/CowDogMoo/bcp?branch=main)
+[![codecov](https://codecov.io/github/CowDogMoo/bcp/graph/badge.svg)](https://codecov.io/github/CowDogMoo/bcp)
 [![Latest Release](https://img.shields.io/github/v/release/cowdogmoo/bcp)](https://github.com/CowDogMoo/bcp/releases/latest)
 [![Renovate](https://github.com/CowDogMoo/bcp/actions/workflows/renovate.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/renovate.yaml)
 
