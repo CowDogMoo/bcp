@@ -67,7 +67,7 @@ func ExecuteToRemoteWithClients(ctx context.Context, transferConfig model.Transf
 
 	log.Info("Uploading %s to S3 bucket %s...", transferConfig.Source, transferConfig.BucketName)
 	if err := retryOperation(func() error {
-		return uploadToS3(ctx, s3Client, transferConfig.BucketName, uploadPath)
+		return UploadToS3(ctx, s3Client, transferConfig.BucketName, uploadPath)
 	}, transferConfig.MaxRetries, transferConfig.RetryDelay); err != nil {
 		return fmt.Errorf("failed to upload to S3: %w", err)
 	}
@@ -164,7 +164,7 @@ func ExecuteFromRemoteWithClients(ctx context.Context, transferConfig model.Tran
 
 	// Clean up S3 objects
 	log.Info("Cleaning up S3 objects...")
-	if err := cleanupS3Objects(ctx, s3Client, transferConfig.BucketName, uploadPath, isDirectory); err != nil {
+	if err := CleanupS3Objects(ctx, s3Client, transferConfig.BucketName, uploadPath, isDirectory); err != nil {
 		log.Warn("Failed to clean up S3 objects: %v", err)
 	}
 
@@ -172,21 +172,46 @@ func ExecuteFromRemoteWithClients(ctx context.Context, transferConfig model.Tran
 	return nil
 }
 
-// uploadToS3 uploads a file or directory to S3
-func uploadToS3(ctx context.Context, client S3API, bucketName, localPath string) error {
+// UploadToS3 uploads a file or directory to S3.
+// If localPath is a directory, files are uploaded recursively with keys
+// relative to the directory's parent.
+func UploadToS3(ctx context.Context, client S3API, bucketName, localPath string) error {
+	return UploadToS3WithPrefix(ctx, client, bucketName, localPath, "")
+}
+
+// UploadToS3WithPrefix uploads a file or directory to S3 with all object
+// keys nested under keyPrefix. An empty keyPrefix matches UploadToS3's
+// behavior. The prefix is normalized to use forward slashes and a trailing
+// slash is added if missing.
+func UploadToS3WithPrefix(ctx context.Context, client S3API, bucketName, localPath, keyPrefix string) error {
 	fileInfo, err := os.Stat(localPath)
 	if err != nil {
 		return fmt.Errorf("failed to stat %s: %w", localPath, err)
 	}
 
+	prefix := normalizeKeyPrefix(keyPrefix)
+
 	if fileInfo.IsDir() {
-		return uploadDirectory(ctx, client, bucketName, localPath)
+		return uploadDirectory(ctx, client, bucketName, localPath, prefix)
 	}
-	return uploadFile(ctx, client, bucketName, localPath, filepath.Base(localPath))
+	return uploadFile(ctx, client, bucketName, localPath, prefix+filepath.Base(localPath))
 }
 
-// uploadDirectory recursively uploads a directory to S3
-func uploadDirectory(ctx context.Context, client S3API, bucketName, localPath string) error {
+// normalizeKeyPrefix ensures the prefix uses forward slashes and ends with
+// a slash (or is empty).
+func normalizeKeyPrefix(prefix string) string {
+	if prefix == "" {
+		return ""
+	}
+	prefix = filepath.ToSlash(prefix)
+	if !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+	return prefix
+}
+
+// uploadDirectory recursively uploads a directory to S3 under keyPrefix.
+func uploadDirectory(ctx context.Context, client S3API, bucketName, localPath, keyPrefix string) error {
 	return filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -203,7 +228,7 @@ func uploadDirectory(ctx context.Context, client S3API, bucketName, localPath st
 		}
 
 		// Convert Windows paths to Unix-style for S3
-		s3Key := filepath.ToSlash(relPath)
+		s3Key := keyPrefix + filepath.ToSlash(relPath)
 
 		return uploadFile(ctx, client, bucketName, path, s3Key)
 	})
@@ -326,8 +351,10 @@ func downloadFile(ctx context.Context, client S3API, bucketName, s3Key, localPat
 	return nil
 }
 
-// cleanupS3Objects deletes objects from S3 after successful download
-func cleanupS3Objects(ctx context.Context, client S3API, bucketName, s3Key string, isDirectory bool) error {
+// CleanupS3Objects deletes objects from S3.
+// When isDirectory is true, all objects with s3Key as a prefix are deleted;
+// otherwise s3Key is treated as a single object key.
+func CleanupS3Objects(ctx context.Context, client S3API, bucketName, s3Key string, isDirectory bool) error {
 	if isDirectory {
 		// List and delete all objects with the prefix
 		listInput := &s3.ListObjectsV2Input{
