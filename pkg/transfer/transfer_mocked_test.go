@@ -423,7 +423,7 @@ func TestUploadDirectory_Success(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir)
+	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir, "")
 	if err != nil {
 		t.Errorf("uploadDirectory() error = %v", err)
 	}
@@ -950,7 +950,7 @@ func TestUploadDirectory_NestedStructure(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir)
+	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir, "")
 	if err != nil {
 		t.Errorf("uploadDirectory() error = %v", err)
 	}
@@ -985,7 +985,7 @@ func TestUploadDirectory_UploadError(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir)
+	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir, "")
 	if err == nil {
 		t.Error("Expected error from upload failure")
 	}
@@ -1112,7 +1112,7 @@ func TestUploadDirectory_WalkError(t *testing.T) {
 	mockS3 := &mockS3Client{}
 
 	ctx := context.Background()
-	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir)
+	err = uploadDirectory(ctx, mockS3, "test-bucket", tmpDir, "")
 
 	// Restore permissions for cleanup
 	_ = os.Chmod(subDir, 0755)
