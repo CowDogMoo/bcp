@@ -19,7 +19,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 env:
-  GO_VERSION: 1.26.0
+  GO_VERSION: 1.26.2
 
 permissions:
   actions: read
@@ -51,7 +51,7 @@ jobs:
           bash .hooks/run-go-tests.sh coverage
 
       - name: Send the coverage output
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6
         with:
           files: coverage-all.out
           token: ${{ secrets.CODECOV_TOKEN }}
