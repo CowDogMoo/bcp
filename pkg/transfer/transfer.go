@@ -67,7 +67,7 @@ func ExecuteToRemoteWithClients(ctx context.Context, transferConfig model.Transf
 
 	log.Info("Uploading %s to S3 bucket %s...", transferConfig.Source, transferConfig.BucketName)
 	if err := retryOperation(func() error {
-		return uploadToS3(ctx, s3Client, transferConfig.BucketName, uploadPath)
+		return UploadToS3(ctx, s3Client, transferConfig.BucketName, uploadPath)
 	}, transferConfig.MaxRetries, transferConfig.RetryDelay); err != nil {
 		return fmt.Errorf("failed to upload to S3: %w", err)
 	}
@@ -164,7 +164,7 @@ func ExecuteFromRemoteWithClients(ctx context.Context, transferConfig model.Tran
 
 	// Clean up S3 objects
 	log.Info("Cleaning up S3 objects...")
-	if err := cleanupS3Objects(ctx, s3Client, transferConfig.BucketName, uploadPath, isDirectory); err != nil {
+	if err := CleanupS3Objects(ctx, s3Client, transferConfig.BucketName, uploadPath, isDirectory); err != nil {
 		log.Warn("Failed to clean up S3 objects: %v", err)
 	}
 
@@ -172,8 +172,10 @@ func ExecuteFromRemoteWithClients(ctx context.Context, transferConfig model.Tran
 	return nil
 }
 
-// uploadToS3 uploads a file or directory to S3
-func uploadToS3(ctx context.Context, client S3API, bucketName, localPath string) error {
+// UploadToS3 uploads a file or directory to S3.
+// If localPath is a directory, files are uploaded recursively with keys
+// relative to the directory's parent.
+func UploadToS3(ctx context.Context, client S3API, bucketName, localPath string) error {
 	fileInfo, err := os.Stat(localPath)
 	if err != nil {
 		return fmt.Errorf("failed to stat %s: %w", localPath, err)
@@ -326,8 +328,10 @@ func downloadFile(ctx context.Context, client S3API, bucketName, s3Key, localPat
 	return nil
 }
 
-// cleanupS3Objects deletes objects from S3 after successful download
-func cleanupS3Objects(ctx context.Context, client S3API, bucketName, s3Key string, isDirectory bool) error {
+// CleanupS3Objects deletes objects from S3.
+// When isDirectory is true, all objects with s3Key as a prefix are deleted;
+// otherwise s3Key is treated as a single object key.
+func CleanupS3Objects(ctx context.Context, client S3API, bucketName, s3Key string, isDirectory bool) error {
 	if isDirectory {
 		// List and delete all objects with the prefix
 		listInput := &s3.ListObjectsV2Input{

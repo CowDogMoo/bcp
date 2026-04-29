@@ -452,9 +452,9 @@ func TestUploadToS3_File(t *testing.T) {
 	mockS3 := &mockS3Client{}
 
 	ctx := context.Background()
-	err = uploadToS3(ctx, mockS3, "test-bucket", testFile)
+	err = UploadToS3(ctx, mockS3, "test-bucket", testFile)
 	if err != nil {
-		t.Errorf("uploadToS3() error = %v", err)
+		t.Errorf("UploadToS3() error = %v", err)
 	}
 }
 
@@ -477,9 +477,9 @@ func TestUploadToS3_Directory(t *testing.T) {
 	mockS3 := &mockS3Client{}
 
 	ctx := context.Background()
-	err = uploadToS3(ctx, mockS3, "test-bucket", tmpDir)
+	err = UploadToS3(ctx, mockS3, "test-bucket", tmpDir)
 	if err != nil {
-		t.Errorf("uploadToS3() error = %v", err)
+		t.Errorf("UploadToS3() error = %v", err)
 	}
 }
 
@@ -487,7 +487,7 @@ func TestUploadToS3_NonExistent(t *testing.T) {
 	mockS3 := &mockS3Client{}
 
 	ctx := context.Background()
-	err := uploadToS3(ctx, mockS3, "test-bucket", "/nonexistent/path")
+	err := UploadToS3(ctx, mockS3, "test-bucket", "/nonexistent/path")
 	if err == nil {
 		t.Error("Expected error for non-existent path")
 	}
@@ -1071,7 +1071,7 @@ func TestUploadToS3_StatError(t *testing.T) {
 	mockS3 := &mockS3Client{}
 
 	ctx := context.Background()
-	err := uploadToS3(ctx, mockS3, "test-bucket", "/nonexistent/path/file.txt")
+	err := UploadToS3(ctx, mockS3, "test-bucket", "/nonexistent/path/file.txt")
 	if err == nil {
 		t.Error("Expected error when file doesn't exist")
 	}
