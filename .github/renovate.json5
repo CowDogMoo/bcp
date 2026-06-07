@@ -84,8 +84,8 @@
     {
       "description": "Group test dependencies",
       "matchPackageNames": [
-        "/*test*/",
-        "/*mock*/"
+        "/test/",
+        "/mock/"
       ],
       "groupName": "test dependencies"
     }
