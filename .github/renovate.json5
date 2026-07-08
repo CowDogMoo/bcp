@@ -48,8 +48,7 @@
         "digest"
       ],
       "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "merge-queue"
+      "automergeType": "pr"
     },
     {
       "description": "Auto merge GitHub Actions minor and patch updates",
@@ -65,8 +64,7 @@
         "digest"
       ],
       "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "merge-queue"
+      "automergeType": "pr"
     },
     {
       "description": "Auto merge pre-commit hook updates",
@@ -78,8 +76,19 @@
         "patch"
       ],
       "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "merge-queue"
+      "automergeType": "pr"
+    },
+    {
+      "description": "Auto merge custom regex manager updates (golang version, go tools, golangci-lint)",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr"
     },
     {
       "description": "Group test dependencies",
@@ -93,8 +102,7 @@
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true,
-    "automergeType": "pr",
-    "automergeStrategy": "merge-queue"
+    "automergeType": "pr"
   },
   "customManagers": [
     {

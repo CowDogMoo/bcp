@@ -6,8 +6,8 @@ on:
     paths:
       - .github/renovate.json5
   schedule:
-    # Run every week on sunday and wednesday at 00:00 UTC
-    - cron: "0 0 * * 0,3"
+    # Run every 6 hours so automerge/rebase fallback happens promptly
+    - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
       dryRun:
