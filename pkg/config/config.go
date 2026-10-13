@@ -23,6 +23,7 @@ THE SOFTWARE.
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -60,7 +61,7 @@ func Init(cfgFile string) error {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		if errors.As(err, &viper.ConfigFileNotFoundError{}) {
 			log.Debug("No config file found, using defaults")
 		} else {
 			return fmt.Errorf("error reading config file: %w", err)

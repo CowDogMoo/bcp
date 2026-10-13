@@ -83,7 +83,7 @@ bcp list instances --region us-west-2
 
 - **Local Machine**:
 
-  - Go 1.20+ (for building from source)
+  - Go 1.26+ (for building from source)
   - AWS CLI installed and configured with appropriate credentials
   - IAM permissions for S3 and SSM
 
