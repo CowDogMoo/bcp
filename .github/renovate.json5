@@ -97,6 +97,20 @@
         "/mock/"
       ],
       "groupName": "test dependencies"
+    },
+    {
+      "description": "Group every Go version update (go.mod go/toolchain directives, setup-go go-version, GO_VERSION env, .tool-versions) into one auto-merged PR so a Go bump never splits into PRs that each fail alone",
+      "matchDatasources": [
+        "golang-version",
+        "docker"
+      ],
+      "matchPackageNames": [
+        "go",
+        "golang"
+      ],
+      "groupName": "go",
+      "automerge": true,
+      "automergeType": "pr"
     }
   ],
   "lockFileMaintenance": {
