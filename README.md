@@ -2,8 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cowdogmoo/bcp)](https://goreportcard.com/report/github.com/cowdogmoo/bcp)
-[![Pre-Commit](https://github.com/CowDogMoo/bcp/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/pre-commit.yaml)
-[![Tests](https://github.com/CowDogMoo/bcp/actions/workflows/tests.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/tests.yaml)
+[![Go CI](https://github.com/CowDogMoo/bcp/actions/workflows/go-ci.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/go-ci.yaml)
 [![🚨 Semgrep Analysis](https://github.com/CowDogMoo/bcp/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/CowDogMoo/bcp/actions/workflows/semgrep.yaml)
 [![codecov](https://codecov.io/github/CowDogMoo/bcp/graph/badge.svg)](https://codecov.io/github/CowDogMoo/bcp)
 [![Latest Release](https://img.shields.io/github/v/release/cowdogmoo/bcp)](https://github.com/CowDogMoo/bcp/releases/latest)
