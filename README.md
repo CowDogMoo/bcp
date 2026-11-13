@@ -82,7 +82,8 @@ bcp list instances --region us-west-2
 
 - **Local Machine**:
 
-  - Go 1.26+ (for building from source)
+  - Go (for building from source; the `go` directive in
+    [`go.mod`](go.mod) sets the minimum version)
   - AWS CLI installed and configured with appropriate credentials
   - IAM permissions for S3 and SSM
 
